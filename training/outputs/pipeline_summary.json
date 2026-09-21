@@ -1,0 +1,11 @@
+{
+  "eval_baseline": "training/outputs/eval_baseline/metrics.md",
+  "ab_listen": "training/outputs/eval_baseline/ab_listen",
+  "synth_manifests": "training/data/manifests",
+  "finetune": "training/outputs/finetune/ulunas_finetuned.pt",
+  "teacher": "training/outputs/teacher/align_report.json",
+  "postfilter": "training/outputs/postfilter/postfilter_report.json",
+  "remixit": "training/outputs/remixit/remixit_report.json",
+  "scene": "training/outputs/scene/scene_head_report.json",
+  "deploy": "training/outputs/deploy/deploy_report.json"
+}

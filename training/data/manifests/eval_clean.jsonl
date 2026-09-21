@@ -1,0 +1,2 @@
+{"id": "clean_only_0119", "noisy": "/home/luke/audio-analysis/ul-unas/audio/clean/0119.wav", "clean": "/home/luke/audio-analysis/ul-unas/audio/clean/0119.wav", "layer": "clean_only", "held_out": true, "use_for_training": false}
+{"id": "clean_only_0174", "noisy": "/home/luke/audio-analysis/ul-unas/audio/clean/0174.wav", "clean": "/home/luke/audio-analysis/ul-unas/audio/clean/0174.wav", "layer": "clean_only", "held_out": true, "use_for_training": false}

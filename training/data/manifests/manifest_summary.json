@@ -1,0 +1,9 @@
+{
+  "speech": 2,
+  "noise": 0,
+  "eval_real": 3,
+  "eval_official": 2,
+  "eval_clean": 2,
+  "public_root": "training/data/raw",
+  "notes": "Demo 降噪前/后 clips are held-out real tests and must not be used for training selection."
+}

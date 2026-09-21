@@ -1,0 +1,193 @@
+{
+  "rows": [
+    {
+      "proxy_sig_dbfs": -41.34871066895934,
+      "proxy_bak": 65.29059073357361,
+      "proxy_bak_improve": 5.5564379050939365,
+      "proxy_ovrl": -39.95960119268586,
+      "id": "人声85db_噪声75db_降噪前",
+      "config": "none",
+      "layer": "game_music"
+    },
+    {
+      "proxy_sig_dbfs": -41.35987250543952,
+      "proxy_bak": 65.2299170600351,
+      "proxy_bak_improve": 5.8569138411316715,
+      "proxy_ovrl": -39.8956440451566,
+      "id": "人声85db_噪声75db_降噪前",
+      "config": "warp_0.01",
+      "layer": "game_music"
+    },
+    {
+      "proxy_sig_dbfs": -41.33265480366376,
+      "proxy_bak": 65.27321581536921,
+      "proxy_bak_improve": 6.136411680502434,
+      "proxy_ovrl": -39.79855188353815,
+      "id": "人声85db_噪声75db_降噪前",
+      "config": "warp_0.02",
+      "layer": "game_music"
+    },
+    {
+      "proxy_sig_dbfs": -41.31210772977571,
+      "proxy_bak": 65.41822894227725,
+      "proxy_bak_improve": 6.638403342043702,
+      "proxy_ovrl": -39.65250689426479,
+      "id": "人声85db_噪声75db_降噪前",
+      "config": "warp_0.04",
+      "layer": "game_music"
+    },
+    {
+      "proxy_sig_dbfs": -41.52895364221134,
+      "proxy_bak": 63.85390334698852,
+      "proxy_bak_improve": 1.8222164454843508,
+      "proxy_ovrl": -41.073399530840256,
+      "id": "人声85db_噪声75db_降噪前",
+      "config": "omlsa_3db",
+      "layer": "game_music"
+    },
+    {
+      "proxy_sig_dbfs": -41.525474461403356,
+      "proxy_bak": 64.60735692067361,
+      "proxy_bak_improve": 2.791395852825147,
+      "proxy_ovrl": -40.827625498197065,
+      "id": "人声85db_噪声75db_降噪前",
+      "config": "omlsa_6db",
+      "layer": "game_music"
+    },
+    {
+      "proxy_sig_dbfs": -41.50785942061827,
+      "proxy_bak": 64.94157816188608,
+      "proxy_bak_improve": 3.3583967941539186,
+      "proxy_ovrl": -40.66826022207979,
+      "id": "人声85db_噪声75db_降噪前",
+      "config": "omlsa_9db",
+      "layer": "game_music"
+    },
+    {
+      "proxy_sig_dbfs": -41.28352430966161,
+      "proxy_bak": 65.73081038530133,
+      "proxy_bak_improve": 12.633862259949346,
+      "proxy_ovrl": -38.12505874467427,
+      "id": "人声85db_噪声85db_降噪前",
+      "config": "none",
+      "layer": "gunshot"
+    },
+    {
+      "proxy_sig_dbfs": -41.280677153056224,
+      "proxy_bak": 65.71126549799396,
+      "proxy_bak_improve": 12.89356013279653,
+      "proxy_ovrl": -38.057287119857094,
+      "id": "人声85db_噪声85db_降噪前",
+      "config": "warp_0.01",
+      "layer": "gunshot"
+    },
+    {
+      "proxy_sig_dbfs": -41.26317469971276,
+      "proxy_bak": 65.98183998921147,
+      "proxy_bak_improve": 13.309121047133388,
+      "proxy_ovrl": -37.93589443792942,
+      "id": "人声85db_噪声85db_降噪前",
+      "config": "warp_0.02",
+      "layer": "gunshot"
+    },
+    {
+      "proxy_sig_dbfs": -41.218695015598314,
+      "proxy_bak": 66.25550576358819,
+      "proxy_bak_improve": 13.850363714594927,
+      "proxy_ovrl": -37.756104086949584,
+      "id": "人声85db_噪声85db_降噪前",
+      "config": "warp_0.04",
+      "layer": "gunshot"
+    },
+    {
+      "proxy_sig_dbfs": -42.31082054224402,
+      "proxy_bak": 62.13014385695442,
+      "proxy_bak_improve": 2.4842184966145595,
+      "proxy_ovrl": -41.68976591809037,
+      "id": "人声85db_噪声85db_降噪前",
+      "config": "omlsa_3db",
+      "layer": "gunshot"
+    },
+    {
+      "proxy_sig_dbfs": -42.18329059857561,
+      "proxy_bak": 62.873791420853365,
+      "proxy_bak_improve": 4.689801578987087,
+      "proxy_ovrl": -41.010840203828835,
+      "id": "人声85db_噪声85db_降噪前",
+      "config": "omlsa_6db",
+      "layer": "gunshot"
+    },
+    {
+      "proxy_sig_dbfs": -41.847548590586584,
+      "proxy_bak": 63.148358902024704,
+      "proxy_bak_improve": 7.0450487807273205,
+      "proxy_ovrl": -40.086286395404755,
+      "id": "人声85db_噪声85db_降噪前",
+      "config": "omlsa_9db",
+      "layer": "gunshot"
+    },
+    {
+      "proxy_sig_dbfs": -44.18629421475818,
+      "proxy_bak": 66.57762770968043,
+      "proxy_bak_improve": 21.989308040791336,
+      "proxy_ovrl": -38.68896720456034,
+      "id": "人声85db_噪声90db_降噪前",
+      "config": "none",
+      "layer": "mmo_bgm"
+    },
+    {
+      "proxy_sig_dbfs": -43.96235423484484,
+      "proxy_bak": 67.24528420700386,
+      "proxy_bak_improve": 22.6998020906544,
+      "proxy_ovrl": -38.28740371218124,
+      "id": "人声85db_噪声90db_降噪前",
+      "config": "warp_0.01",
+      "layer": "mmo_bgm"
+    },
+    {
+      "proxy_sig_dbfs": -43.773614706825285,
+      "proxy_bak": 67.7705168617238,
+      "proxy_bak_improve": 23.314572790175482,
+      "proxy_ovrl": -37.944971509281416,
+      "id": "人声85db_噪声90db_降噪前",
+      "config": "warp_0.02",
+      "layer": "mmo_bgm"
+    },
+    {
+      "proxy_sig_dbfs": -43.59960267028657,
+      "proxy_bak": 68.69392656860842,
+      "proxy_bak_improve": 24.371359249090595,
+      "proxy_ovrl": -37.50676285801392,
+      "id": "人声85db_噪声90db_降噪前",
+      "config": "warp_0.04",
+      "layer": "mmo_bgm"
+    },
+    {
+      "proxy_sig_dbfs": -45.142070329356784,
+      "proxy_bak": 62.41966000655589,
+      "proxy_bak_improve": 2.9755980919038407,
+      "proxy_ovrl": -44.398170806380826,
+      "id": "人声85db_噪声90db_降噪前",
+      "config": "omlsa_3db",
+      "layer": "mmo_bgm"
+    },
+    {
+      "proxy_sig_dbfs": -46.95112024119923,
+      "proxy_bak": 61.30803131440845,
+      "proxy_bak_improve": 5.899519832932036,
+      "proxy_ovrl": -45.47624028296622,
+      "id": "人声85db_噪声90db_降噪前",
+      "config": "omlsa_6db",
+      "layer": "mmo_bgm"
+    },
+    {
+      "proxy_sig_dbfs": -47.69520358386057,
+      "proxy_bak": 60.23656178611451,
+      "proxy_bak_improve": 8.824592402724619,
+      "proxy_ovrl": -45.48905548317941,
+      "id": "人声85db_噪声90db_降噪前",
+      "config": "omlsa_9db",
+      "layer": "mmo_bgm"
+    }
+  ]
+}

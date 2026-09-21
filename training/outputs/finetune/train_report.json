@@ -1,0 +1,16 @@
+{
+  "trainable": 106122,
+  "total": 171328,
+  "best_si_sdr": -50.15282600671293,
+  "seconds": 19.48220419883728,
+  "ckpt": "training/outputs/finetune/ulunas_finetuned.pt",
+  "history": [
+    {
+      "epoch": 0,
+      "step": 16,
+      "train_loss": 41.00825119018555,
+      "si_sdr": -50.15282600671293,
+      "n": 10
+    }
+  ]
+}

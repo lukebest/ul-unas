@@ -1,0 +1,13 @@
+{
+  "sample_rate": 16000,
+  "hop": 256,
+  "n_fft": 512,
+  "replay_ratio": 0.6,
+  "target_ratio": 0.4,
+  "snr_db": [-10, 20],
+  "freeze": "decoder_tail",
+  "lr": 1e-4,
+  "teacher_weight": 0.2,
+  "postfilter": ["warp_0.01", "warp_0.02", "warp_0.04", "omlsa_3db", "omlsa_6db", "omlsa_9db"],
+  "held_out_layers": ["game_music", "gunshot", "mmo_bgm"]
+}

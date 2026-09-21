@@ -1,0 +1,5 @@
+{
+  "ckpt": "training/outputs/scene/scene_head.pt",
+  "mean_loss": 2.5497986555099486,
+  "note": "Soft conditioner only; do not hard-switch models. Use when game/gun/MMO policies conflict."
+}

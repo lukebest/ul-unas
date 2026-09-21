@@ -1,0 +1,54 @@
+{
+  "n": 3,
+  "kept": 3,
+  "rows": [
+    {
+      "id": "人声85db_噪声75db_降噪前",
+      "noisy": "/home/luke/audio-analysis/ul-unas/demo/人声85db_噪声75db_降噪前.wav",
+      "teacher_raw": "/home/luke/audio-analysis/ul-unas/demo/人声85db_噪声75db_降噪后.wav",
+      "delay_s": -0.056250000000000036,
+      "drift": 1.6057242343792375e-19,
+      "env_delay_s": 0.06,
+      "env_peak": 0.9787362857210031,
+      "corr_abs": 0.8324371164922741,
+      "clip_rate": 0.0,
+      "keep": true,
+      "n_windows": 29,
+      "teacher_aligned": "/home/luke/audio-analysis/ul-unas/training/outputs/teacher/人声85db_噪声75db_降噪前_teacher_aligned.wav",
+      "mask_path": "/home/luke/audio-analysis/ul-unas/training/outputs/teacher/人声85db_噪声75db_降噪前_teacher_mask.npy",
+      "noisy_aligned": "/home/luke/audio-analysis/ul-unas/demo/人声85db_噪声75db_降噪前.wav"
+    },
+    {
+      "id": "人声85db_噪声85db_降噪前",
+      "noisy": "/home/luke/audio-analysis/ul-unas/demo/人声85db_噪声85db_降噪前.wav",
+      "teacher_raw": "/home/luke/audio-analysis/ul-unas/demo/人声85db_噪声85db_降噪后.wav",
+      "delay_s": -0.05624999999999998,
+      "drift": 5.975511961196992e-19,
+      "env_delay_s": 0.06,
+      "env_peak": 0.940903049964539,
+      "corr_abs": 0.7834927542251056,
+      "clip_rate": 0.0,
+      "keep": true,
+      "n_windows": 29,
+      "teacher_aligned": "/home/luke/audio-analysis/ul-unas/training/outputs/teacher/人声85db_噪声85db_降噪前_teacher_aligned.wav",
+      "mask_path": "/home/luke/audio-analysis/ul-unas/training/outputs/teacher/人声85db_噪声85db_降噪前_teacher_mask.npy",
+      "noisy_aligned": "/home/luke/audio-analysis/ul-unas/demo/人声85db_噪声85db_降噪前.wav"
+    },
+    {
+      "id": "人声85db_噪声90db_降噪前",
+      "noisy": "/home/luke/audio-analysis/ul-unas/demo/人声85db_噪声90db_降噪前.wav",
+      "teacher_raw": "/home/luke/audio-analysis/ul-unas/demo/人声85db_噪声90db_降噪后.wav",
+      "delay_s": -0.05624999999999997,
+      "drift": 2.1928779402409797e-19,
+      "env_delay_s": 0.06,
+      "env_peak": 0.8645225159850535,
+      "corr_abs": 0.7450181405594037,
+      "clip_rate": 0.0,
+      "keep": true,
+      "n_windows": 29,
+      "teacher_aligned": "/home/luke/audio-analysis/ul-unas/training/outputs/teacher/人声85db_噪声90db_降噪前_teacher_aligned.wav",
+      "mask_path": "/home/luke/audio-analysis/ul-unas/training/outputs/teacher/人声85db_噪声90db_降噪前_teacher_mask.npy",
+      "noisy_aligned": "/home/luke/audio-analysis/ul-unas/demo/人声85db_噪声90db_降噪前.wav"
+    }
+  ]
+}

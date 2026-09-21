@@ -1,0 +1,5 @@
+{
+  "method": "re2re",
+  "mean_loss": -181.80661010742188,
+  "ckpt": "training/outputs/re2re/re2re_student.pt"
+}

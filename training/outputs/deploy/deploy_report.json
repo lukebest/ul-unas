@@ -1,0 +1,32 @@
+{
+  "ckpt": "checkpoints/model_trained_on_dns3.tar",
+  "wav": "audio/noisy/0174.wav",
+  "offline_vs_stream_maxabs": 1.4901161193847656e-07,
+  "match_ok": true,
+  "timing": {
+    "n_frames": 626,
+    "mean_ms": 19.7268137636186,
+    "p50_ms": 19.134279499667173,
+    "p95_ms": 24.2259802503213,
+    "p99_ms": 31.366603749575006,
+    "max_ms": 72.03339700026845,
+    "frame_budget_ms": 16.0,
+    "rtf": 1.2329258602261626,
+    "within_budget_p99": false
+  },
+  "export": {
+    "onnx": "training/outputs/deploy/ulunas_finetuned_stream.onnx",
+    "simple": "training/outputs/deploy/ulunas_finetuned_stream_simple.onnx",
+    "simplified": true
+  },
+  "algo_delay_ms": 32.0,
+  "hop_ms": 16.0,
+  "onnx_timing": {
+    "mean_ms": 1.8357252556597814,
+    "p99_ms": 5.186656249861699,
+    "max_ms": 11.521833001097548,
+    "rtf": 0.11473282847873634,
+    "within_budget_p99": true,
+    "n_frames": 626
+  }
+}

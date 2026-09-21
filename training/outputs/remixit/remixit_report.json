@@ -1,0 +1,5 @@
+{
+  "method": "remixit",
+  "mean_loss": -74.24893569946289,
+  "ckpt": "training/outputs/remixit/remixit_student.pt"
+}
