@@ -9,6 +9,9 @@ training/data/raw/
 training/data/processed/
 training/data/manifests/paired_all.jsonl
 
+# Per-clip eval dumps (keep metrics.md / eval_compare.json)
+training/outputs/**/metrics.json
+
 # Generated eval audio (keep metrics/*.json *.md)
 training/outputs/**/enhanced/
 training/outputs/**/ab_listen/

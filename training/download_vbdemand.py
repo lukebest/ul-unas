@@ -54,10 +54,24 @@ def _download(url: str, dest: Path, timeout: int = 600) -> None:
     print(f"saved {dest} ({dest.stat().st_size} bytes)")
 
 
-def _extract(zip_path: Path, out_dir: Path) -> None:
+def _safe_extract(zip_path: Path, out_dir: Path) -> None:
+    """Extract zip members, rejecting path traversal (Zip Slip)."""
     print(f"extracting {zip_path.name}")
+    out_dir = out_dir.resolve()
+    out_dir.mkdir(parents=True, exist_ok=True)
     with zipfile.ZipFile(zip_path) as zf:
-        zf.extractall(out_dir)
+        for info in zf.infolist():
+            name = info.filename
+            if not name or name.startswith("/") or name.startswith("\\"):
+                raise ValueError(f"unsafe zip member {name!r} in {zip_path.name}")
+            dest = (out_dir / name).resolve()
+            if dest != out_dir and not str(dest).startswith(str(out_dir) + os.sep):
+                raise ValueError(f"Zip Slip blocked member {name!r} in {zip_path.name}")
+            zf.extract(info, out_dir)
+
+
+def _extract(zip_path: Path, out_dir: Path) -> None:
+    _safe_extract(zip_path, out_dir)
 
 
 def _resample_one(src: str, dst: str, sr: int) -> str:
@@ -101,7 +115,7 @@ def write_license(out_root: Path, source: str) -> None:
 - **Speech**: CSTR VCTK Corpus — CC BY 4.0 (https://doi.org/10.7488/ds/1994).
 - **Noise**: DEMAND — CC BY-SA 3.0 (https://zenodo.org/records/1227121).
 - **Edinburgh DataShare item licence**: End-user Licence (see the handle page).
-- **16 kHz Hugging Face mirror** (fallback): `JacobLinCool/VoiceBank-DEMAND-16k`, declared CC BY 4.0.
+- **16 kHz Hugging Face mirror** (opt-in `--allow_hf_fallback` only): `JacobLinCool/VoiceBank-DEMAND-16k`, declared CC BY 4.0. Prefer the official DataShare zips.
 - **Attribution**: Valentini-Botinhao, C. (2017). Noisy speech database for training speech enhancement algorithms and TTS models, 2016 [sound]. University of Edinburgh.
 
 This checkout uses the data for a **research fine-tune** of UL-UNAS. Do not treat the resulting checkpoint as a commercially cleared product model.
@@ -243,8 +257,12 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--output_dir", default="training/data/raw/voicebank_demand")
     p.add_argument("--workers", type=int, default=max(1, ncpu - 1))
     p.add_argument("--timeout", type=int, default=1200)
-    p.add_argument("--allow_hf_fallback", action="store_true", default=True)
-    p.add_argument("--no_hf_fallback", action="store_false", dest="allow_hf_fallback")
+    p.add_argument(
+        "--allow_hf_fallback",
+        action="store_true",
+        default=False,
+        help="Opt-in Hugging Face 16 kHz mirror if Edinburgh DataShare fails. Official DataShare End-user Licence still applies to the content.",
+    )
     return p
 
 

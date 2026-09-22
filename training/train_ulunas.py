@@ -22,15 +22,54 @@ from training.metrics import si_sdr
 from training.model_utils import apply_freeze, enhance_numpy, load_ulunas, trainable_param_count
 from training.paths import resolve_audio
 
+CONFIG_DEFAULT = "training/configs/vbdemand.json"
+COLLAPSE_MARGIN_DB = 2.0
+
 
 def default_device() -> str:
     return "cuda" if torch.cuda.is_available() else "cpu"
 
 
+def read_config(path: str | None) -> dict:
+    if not path:
+        return {}
+    p = Path(path)
+    if not p.is_file():
+        return {}
+    return json.loads(p.read_text(encoding="utf-8"))
+
+
+def select_probe_items(items: list[dict], max_clips: int) -> list[dict]:
+    """Speaker-balanced strided subset. max_clips<=0 means all."""
+    if max_clips is None or max_clips <= 0 or max_clips >= len(items):
+        return items
+    by_spk: dict[str, list[dict]] = {}
+    for row in items:
+        spk = str(row.get("speaker") or str(row.get("id", "unk")).split("_")[0])
+        by_spk.setdefault(spk, []).append(row)
+    speakers = sorted(by_spk)
+    n_spk = max(len(speakers), 1)
+    extra = max_clips % n_spk
+    picked: list[dict] = []
+    for i, spk in enumerate(speakers):
+        pool = by_spk[spk]
+        take = min(len(pool), max_clips // n_spk + (1 if i < extra else 0))
+        if take <= 0:
+            continue
+        stride = max(1, len(pool) // take)
+        picked.extend(pool[::stride][:take])
+    if len(picked) < max_clips:
+        have = {id(r) for r in picked}
+        rest = [r for r in items if id(r) not in have]
+        need = max_clips - len(picked)
+        stride = max(1, len(rest) // need) if rest and need else 1
+        picked.extend(rest[::stride][:need])
+    return picked[:max_clips]
+
+
 def evaluate_manifest(model, manifest: str | Path, device, max_clips: int = 24) -> dict[str, float]:
     items = [r for r in read_jsonl(manifest) if r.get("clean") and r.get("noisy")]
-    if max_clips:
-        items = items[:max_clips]
+    items = select_probe_items(items, max_clips)
     scores = []
     model.eval()
     for item in items:
@@ -57,6 +96,35 @@ def evaluate_loader(model, loader, device) -> dict[str, float]:
     return {"si_sdr": float(sum(scores) / max(len(scores), 1)), "n": len(scores)}
 
 
+def _existing_best_score(path: Path) -> float | None:
+    if not path.exists():
+        return None
+    try:
+        prev = torch.load(str(path), map_location="cpu")
+        if not isinstance(prev, dict):
+            return None
+        metrics = prev.get("metrics") or {}
+        val = metrics.get("full_si_sdr", metrics.get("si_sdr"))
+        return float(val) if val is not None else None
+    except Exception:
+        return None
+
+
+def should_write_best(score: float, best: float, init_score: float | None, margin: float, path: Path) -> bool:
+    if init_score is not None and score < init_score - margin:
+        print(
+            f"skip best ckpt: full-file SI-SDR {score:.3f} is >{margin:.1f} dB below init {init_score:.3f}"
+        )
+        return False
+    if score <= best:
+        return False
+    prev = _existing_best_score(path)
+    if prev is not None and score + 1e-6 < prev:
+        print(f"keep existing {path} SI-SDR={prev:.3f} > {score:.3f}")
+        return False
+    return True
+
+
 def train(args: argparse.Namespace) -> dict:
     device = torch.device(args.device)
     model = load_ulunas(args.ckpt, device=device)
@@ -64,19 +132,22 @@ def train(args: argparse.Namespace) -> dict:
     apply_freeze(model, args.freeze)
     n_train, n_all = trainable_param_count(model)
     print(f"trainable {n_train}/{n_all} freeze={args.freeze}")
+    max_dev = args.max_dev
     if args.dev_manifests:
-        init_full = evaluate_manifest(model, args.dev_manifests[0], device, max_clips=args.max_dev or 24)
+        init_full = evaluate_manifest(model, args.dev_manifests[0], device, max_clips=max_dev)
         print(f"init full-file SI-SDR={init_full['si_sdr']:.3f} n={init_full['n']}")
     else:
         init_full = None
+    init_score = None if init_full is None else init_full["si_sdr"]
 
-    train_set = PairDataset(args.train_manifests, seconds=args.seconds)
+    train_set = PairDataset(args.train_manifests, seconds=args.seconds, training=True)
     dev_set = PairDataset(args.dev_manifests, seconds=args.seconds) if args.dev_manifests else None
-    if dev_set is not None and args.max_dev and len(dev_set) > args.max_dev:
+    if dev_set is not None and max_dev > 0 and len(dev_set) > max_dev:
         from torch.utils.data import Subset
 
-        stride = max(1, len(dev_set) // args.max_dev)
-        idx = list(range(0, len(dev_set), stride))[: args.max_dev]
+        picked = select_probe_items(dev_set.rows, max_dev)
+        id_to_idx = {id(row): i for i, row in enumerate(dev_set.rows)}
+        idx = [id_to_idx[id(row)] for row in picked]
         dev_set = Subset(dev_set, idx)
     loader = DataLoader(
         train_set,
@@ -93,8 +164,10 @@ def train(args: argparse.Namespace) -> dict:
     out_dir.mkdir(parents=True, exist_ok=True)
 
     history = []
-    best = -1e9
     best_path = out_dir / "ulunas_finetuned.pt"
+    existing = _existing_best_score(best_path)
+    best = existing if existing is not None else -1e9
+    wrote_best = False
     step = 0
     t0 = time.time()
     for epoch in range(args.epochs):
@@ -143,30 +216,33 @@ def train(args: argparse.Namespace) -> dict:
                 break
         metrics = {"epoch": epoch, "step": step, "train_loss": float(loss.detach())}
         if args.dev_manifests:
-            full = evaluate_manifest(model, args.dev_manifests[0], device, max_clips=args.max_dev or 24)
+            full = evaluate_manifest(model, args.dev_manifests[0], device, max_clips=max_dev)
             metrics["full_si_sdr"] = full["si_sdr"]
             metrics["full_n"] = full["n"]
             print(f"epoch {epoch} full-file SI-SDR={full['si_sdr']:.3f} n={full['n']}")
-            if full["si_sdr"] > best:
+            if should_write_best(full["si_sdr"], best, init_score, args.collapse_margin, best_path):
                 best = full["si_sdr"]
                 torch.save(
                     {"model": model.state_dict(), "metrics": metrics, "freeze": args.freeze, "init_ckpt": str(args.ckpt)},
                     best_path,
                 )
+                wrote_best = True
         elif dev_loader is not None:
             metrics.update(evaluate_loader(model, dev_loader, device))
             print(f"epoch {epoch} crop SI-SDR={metrics['si_sdr']:.3f}")
-            if metrics["si_sdr"] > best:
+            if should_write_best(metrics["si_sdr"], best, init_score, args.collapse_margin, best_path):
                 best = metrics["si_sdr"]
                 torch.save(
                     {"model": model.state_dict(), "metrics": metrics, "freeze": args.freeze, "init_ckpt": str(args.ckpt)},
                     best_path,
                 )
-        else:
+                wrote_best = True
+        elif init_score is None:
             torch.save(
                 {"model": model.state_dict(), "metrics": metrics, "freeze": args.freeze, "init_ckpt": str(args.ckpt)},
                 best_path,
             )
+            wrote_best = True
         history.append(metrics)
         if args.max_steps and step >= args.max_steps:
             break
@@ -175,6 +251,7 @@ def train(args: argparse.Namespace) -> dict:
     torch.save({"model": model.state_dict(), "history": history, "freeze": args.freeze, "init_ckpt": str(args.ckpt)}, last_path)
     report = {
         "init_ckpt": str(args.ckpt),
+        "config": getattr(args, "config", None),
         "trainable": n_train,
         "total": n_all,
         "freeze": args.freeze,
@@ -183,7 +260,7 @@ def train(args: argparse.Namespace) -> dict:
         "w_ri": args.w_ri,
         "w_sisnr": args.w_sisnr,
         "w_prot": args.w_prot,
-        "init_full_si_sdr": None if init_full is None else init_full["si_sdr"],
+        "init_full_si_sdr": init_score,
         "batch_size": args.batch_size,
         "seconds_per_clip": args.seconds,
         "epochs": args.epochs,
@@ -192,42 +269,66 @@ def train(args: argparse.Namespace) -> dict:
         "device": str(device),
         "cuda_available": torch.cuda.is_available(),
         "best_si_sdr": best if best > -1e8 else None,
+        "wrote_best": wrote_best,
         "seconds": time.time() - t0,
-        "ckpt": str(best_path),
+        "ckpt": str(best_path) if best_path.exists() else str(last_path),
         "last_ckpt": str(last_path),
         "train_manifests": list(args.train_manifests),
         "dev_manifests": list(args.dev_manifests or []),
         "history": history,
     }
     (out_dir / "train_report.json").write_text(json.dumps(report, indent=2), encoding="utf-8")
-    print(json.dumps({k: report[k] for k in ("init_ckpt", "trainable", "best_si_sdr", "steps_run", "device", "seconds", "ckpt")}, indent=2))
+    print(json.dumps({k: report[k] for k in ("init_ckpt", "trainable", "best_si_sdr", "wrote_best", "steps_run", "device", "seconds", "ckpt")}, indent=2))
     return report
 
 
-def build_parser() -> argparse.ArgumentParser:
+def build_parser(cfg: dict | None = None) -> argparse.ArgumentParser:
+    cfg = cfg or {}
+
+    def g(key: str, fallback):
+        return cfg[key] if key in cfg else fallback
+
     p = argparse.ArgumentParser()
-    p.add_argument("--ckpt", default="checkpoints/model_trained_on_dns3.tar")
-    p.add_argument("--train_manifests", nargs="+", default=["training/data/manifests/train_synth.jsonl"])
-    p.add_argument("--dev_manifests", nargs="+", default=["training/data/manifests/dev_synth.jsonl"])
-    p.add_argument("--output_dir", default="training/outputs/finetune")
+    p.add_argument("--config", default=CONFIG_DEFAULT, help="JSON defaults; CLI flags override")
+    p.add_argument("--ckpt", default=g("init_ckpt", "checkpoints/model_trained_on_dns3.tar"))
+    p.add_argument(
+        "--train_manifests",
+        nargs="+",
+        default=g("train_manifests", ["training/data/manifests/train_vbdemand.jsonl"]),
+    )
+    p.add_argument(
+        "--dev_manifests",
+        nargs="+",
+        default=g("dev_manifests", ["training/data/manifests/dev_vbdemand.jsonl"]),
+    )
+    p.add_argument("--output_dir", default=g("output_dir", "training/outputs/finetune_vbdemand"))
     p.add_argument("--device", default=default_device())
-    p.add_argument("--freeze", default="decoder_tail", choices=["decoder_tail", "decoder_all", "full"])
-    p.add_argument("--lr", type=float, default=1e-4)
-    p.add_argument("--batch_size", type=int, default=2)
-    p.add_argument("--seconds", type=float, default=2.0)
-    p.add_argument("--epochs", type=int, default=2)
-    p.add_argument("--max_steps", type=int, default=0, help="0 = run all epochs with no step cap")
-    p.add_argument("--log_every", type=int, default=20)
+    p.add_argument("--freeze", default=g("freeze", "decoder_tail"), choices=["decoder_tail", "decoder_all", "full"])
+    p.add_argument("--lr", type=float, default=float(g("lr", 1e-5)))
+    p.add_argument("--batch_size", type=int, default=int(g("batch_size", 8)))
+    p.add_argument("--seconds", type=float, default=float(g("seconds", 2.0)))
+    p.add_argument("--epochs", type=int, default=int(g("epochs", 1)))
+    p.add_argument("--max_steps", type=int, default=int(g("max_steps", 800)), help="0 = run all epochs with no step cap")
+    p.add_argument("--log_every", type=int, default=50)
     p.add_argument("--num_workers", type=int, default=0)
-    p.add_argument("--max_dev", type=int, default=64, help="cap in-loop dev clips; 0 = all")
+    p.add_argument("--max_dev", type=int, default=int(g("max_dev", 24)), help="cap in-loop dev clips; 0 = all")
+    p.add_argument("--collapse_margin", type=float, default=float(g("collapse_margin", COLLAPSE_MARGIN_DB)))
     p.add_argument("--use_teacher", action="store_true")
     p.add_argument("--w_teacher", type=float, default=0.2)
-    p.add_argument("--w_mag", type=float, default=70.0)
-    p.add_argument("--w_ri", type=float, default=30.0)
-    p.add_argument("--w_sisnr", type=float, default=1.0)
-    p.add_argument("--w_prot", type=float, default=8.0)
+    p.add_argument("--w_mag", type=float, default=float(g("w_mag", 10.0)))
+    p.add_argument("--w_ri", type=float, default=float(g("w_ri", 5.0)))
+    p.add_argument("--w_sisnr", type=float, default=float(g("w_sisnr", 1.0)))
+    p.add_argument("--w_prot", type=float, default=float(g("w_prot", 2.0)))
     return p
 
 
+def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
+    pre = argparse.ArgumentParser(add_help=False)
+    pre.add_argument("--config", default=CONFIG_DEFAULT)
+    pre_args, _ = pre.parse_known_args(argv)
+    cfg = read_config(pre_args.config)
+    return build_parser(cfg).parse_args(argv)
+
+
 if __name__ == "__main__":
-    train(build_parser().parse_args())
+    train(parse_args())

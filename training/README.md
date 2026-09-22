@@ -18,6 +18,8 @@ Official 48 kHz pairs from Edinburgh DataShare (Valentini), resampled to 16 kHz:
 
 ```bash
 python training/download_vbdemand.py --output_dir training/data/raw/voicebank_demand
+# Official DataShare only by default. Opt-in HF 16 kHz mirror:
+# python training/download_vbdemand.py --allow_hf_fallback
 python training/prepare_manifest.py
 python training/synthesize_pairs.py --mode ingest
 ```
@@ -34,6 +36,14 @@ If `training/data/raw/` is empty, `synthesize_pairs.py --mode synth` still build
 
 Init **only** from `checkpoints/model_trained_on_dns3.tar`. Do not resume `training/outputs/finetune/ulunas_finetuned.pt`.
 
+Entrypoint is `training/configs/vbdemand.json` (safe defaults: `lr=1e-5`, `w_mag=10`, `w_ri=5`, `w_prot=2`, `max_steps=800`). CLI flags override the JSON. A collapsed run will not overwrite `ulunas_finetuned.pt` if full-file SI-SDR falls more than 2 dB below init.
+
+```bash
+python training/train_ulunas.py --config training/configs/vbdemand.json
+```
+
+Equivalent explicit flags:
+
 ```bash
 python training/train_ulunas.py \
   --ckpt checkpoints/model_trained_on_dns3.tar \
@@ -47,11 +57,10 @@ python training/train_ulunas.py \
   --epochs 1 \
   --max_steps 800 \
   --log_every 50 \
-  --w_mag 10 --w_ri 5 --w_sisnr 1 --w_prot 2 \
-  --log_every 50
+  --w_mag 10 --w_ri 5 --w_sisnr 1 --w_prot 2
 ```
 
-`--device` defaults to `cuda` when available, otherwise `cpu`. `--max_steps 0` means no toy step cap.
+`--device` defaults to `cuda` when available, otherwise `cpu`. `--max_steps 0` means no step cap (not recommended). `--max_dev 0` uses the full dev set.
 
 ## Eval (SI-SDR + PESQ)
 
@@ -80,7 +89,7 @@ python training/evaluate.py \
   --output_dir training/outputs/eval_demo_heldout
 ```
 
-See `training/experiments/vbdemand_finetune.md` for the measured table.
+See `training/experiments/vbdemand_finetune.md` for the measured table. Eval with clean references requires `pesq` (`--no-require-pesq` to skip).
 
 ## Older smoke / chip-teacher order
 
@@ -88,7 +97,7 @@ See `training/experiments/vbdemand_finetune.md` for the measured table.
 python training/prepare_manifest.py
 python training/synthesize_pairs.py --mode synth
 python training/evaluate.py --manifest training/data/manifests/eval_all.jsonl --output_dir training/outputs/eval_baseline
-python training/train_ulunas.py --freeze decoder_tail --lr 1e-4 --max_steps 16
+python training/train_ulunas.py --config training/configs/default.json --output_dir training/outputs/finetune --max_steps 16
 python training/align_teacher.py
 python training/postfilter.py --ckpt checkpoints/model_trained_on_dns3.tar
 python training/remixit.py --method remixit

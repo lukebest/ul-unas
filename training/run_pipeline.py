@@ -33,8 +33,12 @@ def main() -> None:
     )["timing"]
     if not args.skip_train:
         summary["train"] = train_ulunas.train(
-            train_ulunas.build_parser().parse_args([
+            train_ulunas.parse_args([
+                "--config", "training/configs/default.json",
                 "--device", args.device,
+                "--output_dir", "training/outputs/finetune",
+                "--train_manifests", "training/data/manifests/train_synth.jsonl",
+                "--dev_manifests", "training/data/manifests/dev_synth.jsonl",
                 "--max_steps", "16",
                 "--epochs", "2",
                 "--seconds", "2.0",

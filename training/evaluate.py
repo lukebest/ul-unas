@@ -80,7 +80,7 @@ def evaluate_pair(mix: np.ndarray, est: np.ndarray, clean: np.ndarray | None, sr
         estoi = try_estoi(est, clean, sr)
         if estoi is not None:
             row["estoi"] = estoi
-        pesq_val = try_pesq(est, clean, sr)
+        pesq_val = try_pesq(est, clean, sr, require=False)
         if pesq_val is not None:
             row["pesq"] = pesq_val
         row.update(residual_energy(est, clean, mix, sr=sr))
@@ -96,6 +96,15 @@ def run_eval(args: argparse.Namespace) -> dict:
     items = load_manifest(Path(args.manifest))
     if args.max_clips and args.max_clips > 0:
         items = items[: args.max_clips]
+    has_clean = any(item.get("clean") for item in items)
+    if has_clean and args.require_pesq:
+        try:
+            import pesq  # noqa: F401
+        except ImportError:
+            raise SystemExit(
+                "PESQ is required for this eval (pip install pesq). "
+                "Re-run with --no-require-pesq to skip PESQ."
+            )
     out_dir = Path(args.output_dir)
     ab_dir = out_dir / "ab_listen"
     enh_dir = out_dir / "enhanced"
@@ -203,6 +212,12 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--output_dir", default="training/outputs/eval")
     p.add_argument("--max_clips", type=int, default=0, help="0 = all clips")
     p.add_argument("--save_audio", action=argparse.BooleanOptionalAction, default=True)
+    p.add_argument(
+        "--require-pesq",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="Fail if pesq is missing and the manifest has clean references (default: true)",
+    )
     return p
 
 

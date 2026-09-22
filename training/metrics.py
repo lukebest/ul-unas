@@ -42,10 +42,12 @@ def residual_energy(est: np.ndarray, ref: np.ndarray, mix: np.ndarray, sr: int =
     }
 
 
-def try_pesq(est: np.ndarray, ref: np.ndarray, sr: int = 16000) -> float | None:
+def try_pesq(est: np.ndarray, ref: np.ndarray, sr: int = 16000, require: bool = False) -> float | None:
     try:
         from pesq import pesq as pesq_fn
     except ImportError:
+        if require:
+            raise
         return None
     n = min(len(est), len(ref))
     if n < int(sr * 0.25):

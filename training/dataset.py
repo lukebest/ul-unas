@@ -21,11 +21,19 @@ def read_jsonl(path: str | Path) -> list[dict]:
 
 
 class PairDataset(Dataset):
-    def __init__(self, manifests: list[str | Path], seconds: float = 4.0, sr: int = 16000):
+    def __init__(
+        self,
+        manifests: list[str | Path],
+        seconds: float = 4.0,
+        sr: int = 16000,
+        training: bool = False,
+    ):
         self.rows: list[dict] = []
         for man in manifests:
             for row in read_jsonl(man):
                 if row.get("held_out"):
+                    continue
+                if training and row.get("use_for_training") is False:
                     continue
                 if not row.get("noisy"):
                     continue

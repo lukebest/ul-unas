@@ -73,7 +73,7 @@ Measured by `training/evaluate.py` with wideband PESQ. No fabricated numbers.
 
 Delta vs official DNS3: **+1.231 dB SI-SDR**, **+0.030 PESQ**.
 
-Sources: `training/outputs/eval_vbdemand_baseline/metrics.json`, `training/outputs/eval_vbdemand_finetuned/metrics.json`, `training/outputs/finetune_vbdemand/eval_compare.json`.
+Sources: `training/outputs/eval_vbdemand_baseline/metrics.md`, `training/outputs/eval_vbdemand_finetuned/metrics.md`, `training/outputs/finetune_vbdemand/eval_compare.json`.
 
 ## In-repo demo (held-out, no paired clean)
 
