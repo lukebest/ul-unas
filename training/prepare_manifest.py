@@ -57,6 +57,28 @@ def write_jsonl(path: Path, rows: list[dict]) -> None:
             f.write(json.dumps(row, ensure_ascii=False) + "\n")
 
 
+def jsonl_row_count(path: Path) -> int:
+    if not path.is_file():
+        return 0
+    n = 0
+    with path.open(encoding="utf-8") as f:
+        for line in f:
+            if line.strip():
+                n += 1
+    return n
+
+
+def write_jsonl_skip_empty(path: Path, rows: list[dict]) -> int:
+    """Write JSONL unless `rows` is empty and `path` already has rows. Returns on-disk count."""
+    if not rows:
+        existing = jsonl_row_count(path)
+        if existing:
+            print(f"skip empty write; keep existing {path} ({existing} rows)")
+            return existing
+    write_jsonl(path, rows)
+    return len(rows)
+
+
 def speaker_id(stem: str) -> str:
     return stem.split("_")[0] if "_" in stem else stem
 
@@ -267,9 +289,9 @@ def build(args: argparse.Namespace) -> dict:
     write_jsonl(out / "eval_official.jsonl", official_noise)
     write_jsonl(out / "eval_clean.jsonl", clean_eval)
     write_jsonl(out / "eval_all.jsonl", demo_eval + official_noise + clean_eval)
-    write_jsonl(out / "train_vbdemand.jsonl", vb["train"])
-    write_jsonl(out / "dev_vbdemand.jsonl", vb["dev"])
-    write_jsonl(out / "eval_vbdemand.jsonl", vb["eval"])
+    n_train = write_jsonl_skip_empty(out / "train_vbdemand.jsonl", vb["train"])
+    n_dev = write_jsonl_skip_empty(out / "dev_vbdemand.jsonl", vb["dev"])
+    n_eval = write_jsonl_skip_empty(out / "eval_vbdemand.jsonl", vb["eval"])
 
     summary = {
         "speech": len(speech),
@@ -277,9 +299,9 @@ def build(args: argparse.Namespace) -> dict:
         "eval_real": len(demo_eval),
         "eval_official": len(official_noise),
         "eval_clean": len(clean_eval),
-        "train_vbdemand": len(vb["train"]),
-        "dev_vbdemand": len(vb["dev"]),
-        "eval_vbdemand": len(vb["eval"]),
+        "train_vbdemand": n_train,
+        "dev_vbdemand": n_dev,
+        "eval_vbdemand": n_eval,
         "public_root": repo_rel(Path(args.public_root), repo) if Path(args.public_root).exists() else str(args.public_root),
         "notes": (
             "Demo 降噪前/后 clips are held-out real tests and must not be used for training. "

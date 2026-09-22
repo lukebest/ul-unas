@@ -44,7 +44,9 @@ class PairDataset(Dataset):
                 row["noisy"] = str(noisy_p)
                 if row.get("clean"):
                     clean_p = resolve_audio(row["clean"])
-                    row["clean"] = str(clean_p) if clean_p.exists() else None
+                    if not clean_p.exists():
+                        continue
+                    row["clean"] = str(clean_p)
                 if row.get("teacher"):
                     teacher_p = resolve_audio(row["teacher"])
                     row["teacher"] = str(teacher_p) if teacher_p.exists() else None

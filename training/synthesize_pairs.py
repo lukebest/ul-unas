@@ -20,7 +20,7 @@ if str(ROOT) not in sys.path:
 from training.audio_io import apply_rir, load_mono, mix_at_snr, random_eq, soft_clip, write_wav
 from training import SAMPLE_RATE
 from training.paths import repo_rel, resolve_audio
-from training.prepare_manifest import DEV_SPEAKERS, find_vbdemand_roots, speaker_id
+from training.prepare_manifest import DEV_SPEAKERS, find_vbdemand_roots, speaker_id, write_jsonl_skip_empty
 
 
 def read_jsonl(path: Path) -> list[dict]:
@@ -178,14 +178,15 @@ def ingest_public_pairs(args: argparse.Namespace) -> dict:
     train_rows = [r for r in written if r["split"] == "train"]
     dev_rows = [r for r in written if r["split"] == "dev"]
     eval_rows = [r for r in written if r["split"] == "test"]
-    write_jsonl(man_dir / "train_vbdemand.jsonl", train_rows)
-    write_jsonl(man_dir / "dev_vbdemand.jsonl", dev_rows)
-    write_jsonl(man_dir / "eval_vbdemand.jsonl", eval_rows)
+    n_train = write_jsonl_skip_empty(man_dir / "train_vbdemand.jsonl", train_rows)
+    n_dev = write_jsonl_skip_empty(man_dir / "dev_vbdemand.jsonl", dev_rows)
+    n_eval = write_jsonl_skip_empty(man_dir / "eval_vbdemand.jsonl", eval_rows)
     summary = {
-        "n": len(written),
+        "n": n_train + n_dev + n_eval,
         "mode": "ingest",
-        "by_split": {"train": len(train_rows), "dev": len(dev_rows), "test": len(eval_rows)},
+        "by_split": {"train": n_train, "dev": n_dev, "test": n_eval},
         "copy_audio": copy_audio,
+        "scanned": len(written),
     }
     print(json.dumps(summary, indent=2))
     return summary

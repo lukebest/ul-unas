@@ -80,21 +80,6 @@ def evaluate_manifest(model, manifest: str | Path, device, max_clips: int = 24) 
     return {"si_sdr": float(sum(scores) / max(len(scores), 1)), "n": len(scores)}
 
 
-def evaluate_loader(model, loader, device) -> dict[str, float]:
-    model.eval()
-    scores = []
-    with torch.inference_mode():
-        for batch in loader:
-            mix = batch["mix"].to(device)
-            clean = batch["clean"].to(device)
-            est = model(mix)
-            for i in range(mix.shape[0]):
-                if float(clean[i].abs().mean()) < 1e-6:
-                    continue
-                scores.append(si_sdr(est[i].cpu().numpy(), clean[i].cpu().numpy()))
-    return {"si_sdr": float(sum(scores) / max(len(scores), 1)), "n": len(scores)}
-
-
 def _existing_best_score(path: Path) -> float | None:
     if not path.exists():
         return None
@@ -146,23 +131,14 @@ def train(args: argparse.Namespace) -> dict:
     init_score = None if init_full is None else init_full["si_sdr"]
 
     train_set = PairDataset(args.train_manifests, seconds=args.seconds, training=True)
-    dev_set = PairDataset(args.dev_manifests, seconds=args.seconds) if args.dev_manifests else None
-    if dev_set is not None and max_dev > 0 and len(dev_set) > max_dev:
-        from torch.utils.data import Subset
-
-        picked = select_probe_items(dev_set.rows, max_dev)
-        id_to_idx = {id(row): i for i, row in enumerate(dev_set.rows)}
-        idx = [id_to_idx[id(row)] for row in picked]
-        dev_set = Subset(dev_set, idx)
+    # Epoch gating uses evaluate_manifest when --dev_manifests is set; do not
+    # also build a crop Subset/dev_loader that is never consulted.
     loader = DataLoader(
         train_set,
         batch_size=args.batch_size,
         sampler=balanced_sampler(train_set),
         num_workers=args.num_workers,
         drop_last=len(train_set) >= args.batch_size,
-    )
-    dev_loader = (
-        DataLoader(dev_set, batch_size=1, shuffle=False, num_workers=0) if dev_set is not None else None
     )
     opt = torch.optim.Adam((p for p in model.parameters() if p.requires_grad), lr=args.lr)
     out_dir = Path(args.output_dir)
@@ -233,16 +209,6 @@ def train(args: argparse.Namespace) -> dict:
                     best_path,
                 )
                 wrote_best = True
-        elif dev_loader is not None:
-            metrics.update(evaluate_loader(model, dev_loader, device))
-            print(f"epoch {epoch} crop SI-SDR={metrics['si_sdr']:.3f}")
-            if should_write_best(metrics["si_sdr"], best, init_score, best_path):
-                best = metrics["si_sdr"]
-                torch.save(
-                    {"model": model.state_dict(), "metrics": metrics, "freeze": args.freeze, "init_ckpt": str(args.ckpt)},
-                    best_path,
-                )
-                wrote_best = True
         elif init_score is None:
             torch.save(
                 {"model": model.state_dict(), "metrics": metrics, "freeze": args.freeze, "init_ckpt": str(args.ckpt)},
@@ -278,7 +244,7 @@ def train(args: argparse.Namespace) -> dict:
         "best_si_sdr": best if best > -1e8 else None,
         "wrote_best": wrote_best,
         "seconds": time.time() - t0,
-        "ckpt": str(best_path) if best_path.exists() else str(last_path),
+        "ckpt": str(best_path) if best_path.exists() else None,
         "last_ckpt": str(last_path),
         "train_manifests": list(args.train_manifests),
         "dev_manifests": list(args.dev_manifests or []),
