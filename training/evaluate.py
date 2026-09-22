@@ -25,8 +25,10 @@ from training.metrics import (
     si_sdri,
     summarize_rows,
     try_estoi,
+    try_pesq,
 )
 from training.model_utils import enhance_numpy, load_ulunas
+from training.paths import resolve_audio
 
 
 SCENE_MAP = {
@@ -47,6 +49,8 @@ def infer_layer(name: str) -> str:
         return "mmo_bgm"
     if name.startswith("official"):
         return "official_paired"
+    if name.startswith("p") and "_" in name:
+        return "vbdemand"
     return "synthetic"
 
 
@@ -76,6 +80,9 @@ def evaluate_pair(mix: np.ndarray, est: np.ndarray, clean: np.ndarray | None, sr
         estoi = try_estoi(est, clean, sr)
         if estoi is not None:
             row["estoi"] = estoi
+        pesq_val = try_pesq(est, clean, sr)
+        if pesq_val is not None:
+            row["pesq"] = pesq_val
         row.update(residual_energy(est, clean, mix, sr=sr))
         row["clean_passthrough_sisdr"] = si_sdr(est, clean) if np.allclose(mix, clean, atol=1e-5) else None
         if row["clean_passthrough_sisdr"] is None:
@@ -87,10 +94,15 @@ def run_eval(args: argparse.Namespace) -> dict:
     device = args.device
     model = load_ulunas(args.ckpt, device=device)
     items = load_manifest(Path(args.manifest))
+    if args.max_clips and args.max_clips > 0:
+        items = items[: args.max_clips]
     out_dir = Path(args.output_dir)
     ab_dir = out_dir / "ab_listen"
     enh_dir = out_dir / "enhanced"
     out_dir.mkdir(parents=True, exist_ok=True)
+    if args.save_audio:
+        ab_dir.mkdir(parents=True, exist_ok=True)
+        enh_dir.mkdir(parents=True, exist_ok=True)
 
     rows = []
     timer = Timer()
@@ -98,33 +110,38 @@ def run_eval(args: argparse.Namespace) -> dict:
     for item in items:
         name = item["id"]
         layer = item.get("layer") or infer_layer(name)
-        mix, sr = load_mono(item["noisy"])
+        mix, sr = load_mono(resolve_audio(item["noisy"]))
         clean = None
         if item.get("clean"):
-            clean, _ = load_mono(item["clean"])
+            clean, _ = load_mono(resolve_audio(item["clean"]))
         chip = None
         if item.get("teacher"):
-            chip, _ = load_mono(item["teacher"])
+            chip, _ = load_mono(resolve_audio(item["teacher"]))
 
         with timer:
             est = enhance_numpy(model, mix, device=model.parameters().__next__().device)
         audio_seconds += len(mix) / sr
-        write_wav(enh_dir / f"{name}_ulunas.wav", est, sr)
+        if args.save_audio:
+            write_wav(enh_dir / f"{name}_ulunas.wav", est, sr)
 
         row = evaluate_pair(mix, est, clean, sr)
-        row.update({"name": name, "layer": layer, "system": "ulunas", "path": str(enh_dir / f"{name}_ulunas.wav")})
+        row.update({"name": name, "layer": layer, "system": "ulunas"})
+        if args.save_audio:
+            row["path"] = str(enh_dir / f"{name}_ulunas.wav")
         rows.append(row)
 
         row_in = evaluate_pair(mix, mix, clean, sr)
         row_in.update({"name": name, "layer": layer, "system": "noisy"})
         rows.append(row_in)
 
-        write_wav(ab_dir / f"{name}_noisy.wav", mix, sr)
-        write_wav(ab_dir / f"{name}_ulunas_loudness_matched.wav", match_rms(est, mix), sr)
+        if args.save_audio:
+            write_wav(ab_dir / f"{name}_noisy.wav", mix, sr)
+            write_wav(ab_dir / f"{name}_ulunas_loudness_matched.wav", match_rms(est, mix), sr)
         if chip is not None:
             n = min(len(mix), len(chip))
             chip_m = match_rms(chip[:n], mix[:n])
-            write_wav(ab_dir / f"{name}_chip_loudness_matched.wav", chip_m, sr)
+            if args.save_audio:
+                write_wav(ab_dir / f"{name}_chip_loudness_matched.wav", chip_m, sr)
             row_chip = evaluate_pair(mix[:n], chip_m, clean[:n] if clean is not None else None, sr)
             row_chip.update({"name": name, "layer": layer, "system": "chip_loudness_matched"})
             rows.append(row_chip)
@@ -184,6 +201,8 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--ckpt", default=None)
     p.add_argument("--device", default="cpu")
     p.add_argument("--output_dir", default="training/outputs/eval")
+    p.add_argument("--max_clips", type=int, default=0, help="0 = all clips")
+    p.add_argument("--save_audio", action=argparse.BooleanOptionalAction, default=True)
     return p
 
 

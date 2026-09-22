@@ -1,0 +1,46 @@
+{
+  "systems": [
+    {
+      "file": "training/outputs/eval_vbdemand_baseline/metrics.json",
+      "ckpt": "checkpoints/model_trained_on_dns3.tar",
+      "system": "ulunas",
+      "n": 824,
+      "si_sdr": 15.984567046750179,
+      "si_sdri": 7.53554215964746,
+      "pesq": 2.524066820885371,
+      "estoi": 0.8193490273243415
+    },
+    {
+      "file": "training/outputs/eval_vbdemand_finetuned/metrics.json",
+      "ckpt": "training/outputs/finetune_vbdemand/ulunas_finetuned.pt",
+      "system": "ulunas",
+      "n": 824,
+      "si_sdr": 17.215360335539874,
+      "si_sdri": 8.766335448437152,
+      "pesq": 2.5535847356597197,
+      "estoi": 0.8204911203553221
+    }
+  ],
+  "noisy": [
+    {
+      "file": "training/outputs/eval_vbdemand_baseline/metrics.json",
+      "ckpt": "checkpoints/model_trained_on_dns3.tar",
+      "system": "noisy",
+      "n": 824,
+      "si_sdr": 8.44902488710272,
+      "si_sdri": 0.0,
+      "pesq": 1.9677875973645924,
+      "estoi": 0.7867754259400739
+    },
+    {
+      "file": "training/outputs/eval_vbdemand_finetuned/metrics.json",
+      "ckpt": "training/outputs/finetune_vbdemand/ulunas_finetuned.pt",
+      "system": "noisy",
+      "n": 824,
+      "si_sdr": 8.44902488710272,
+      "si_sdri": 0.0,
+      "pesq": 1.9677875973645924,
+      "estoi": 0.7867754259400739
+    }
+  ]
+}

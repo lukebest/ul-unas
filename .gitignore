@@ -1,0 +1,17 @@
+__pycache__/
+*.py[cod]
+.Python
+.venv/
+venv/
+
+# Large public datasets (download via training/download_vbdemand.py)
+training/data/raw/
+training/data/processed/
+training/data/manifests/paired_all.jsonl
+
+# Generated eval audio (keep metrics/*.json *.md)
+training/outputs/**/enhanced/
+training/outputs/**/ab_listen/
+training/outputs/**/*.wav
+training/outputs/**/*.onnx
+training/outputs/**/*.npy

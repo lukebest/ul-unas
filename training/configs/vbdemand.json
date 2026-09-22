@@ -1,0 +1,19 @@
+{
+  "sample_rate": 16000,
+  "hop": 256,
+  "n_fft": 512,
+  "dataset": "VoiceBank+DEMAND",
+  "init_ckpt": "checkpoints/model_trained_on_dns3.tar",
+  "output_dir": "training/outputs/finetune_vbdemand",
+  "freeze": "decoder_tail",
+  "lr": 1e-5,
+  "batch_size": 8,
+  "seconds": 2.0,
+  "epochs": 1,
+  "max_steps": 800,
+  "w_mag": 10,
+  "w_ri": 5,
+  "w_sisnr": 1,
+  "w_prot": 2,
+  "held_out": ["eval_vbdemand (p232, p257)", "eval_real demo clips", "official_paired repo audio"]
+}
