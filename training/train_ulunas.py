@@ -66,7 +66,7 @@ def select_probe_items(items: list[dict], max_clips: int) -> list[dict]:
     return picked[:max_clips]
 
 
-def evaluate_manifest(model, manifest: str | Path, device, max_clips: int = 24) -> dict[str, float]:
+def evaluate_manifest(model, manifest: str | Path, device, max_clips: int = 24) -> dict[str, float | None]:
     items = [r for r in read_jsonl(manifest) if r.get("clean") and r.get("noisy")]
     items = select_probe_items(items, max_clips)
     scores = []
@@ -77,30 +77,59 @@ def evaluate_manifest(model, manifest: str | Path, device, max_clips: int = 24) 
         est = enhance_numpy(model, mix, device=device)
         n = min(len(est), len(clean), len(mix))
         scores.append(si_sdr(est[:n], clean[:n]))
-    return {"si_sdr": float(sum(scores) / max(len(scores), 1)), "n": len(scores)}
+    if not scores:
+        return {"si_sdr": None, "n": 0}
+    return {"si_sdr": float(sum(scores) / len(scores)), "n": len(scores)}
+
+
+def _load_ckpt(path: Path):
+    try:
+        return torch.load(str(path), map_location="cpu", weights_only=False)
+    except TypeError:
+        return torch.load(str(path), map_location="cpu")
 
 
 def _existing_best_score(path: Path) -> float | None:
+    """Stored SI-SDR, or None if `path` is absent.
+
+    If the file exists but the score cannot be read, raise RuntimeError so a
+    silent None cannot zero the Decision B lock.
+    """
     if not path.exists():
         return None
     try:
-        prev = torch.load(str(path), map_location="cpu")
-        if not isinstance(prev, dict):
-            return None
-        metrics = prev.get("metrics") or {}
-        val = metrics.get("full_si_sdr", metrics.get("si_sdr"))
-        return float(val) if val is not None else None
-    except Exception:
-        return None
+        prev = _load_ckpt(path)
+    except Exception as exc:
+        raise RuntimeError(f"existing best {path} could not be loaded; refuse overwrite") from exc
+    if not isinstance(prev, dict):
+        raise RuntimeError(f"existing best {path} is not a dict ckpt; refuse overwrite")
+    metrics = prev.get("metrics") or {}
+    val = metrics.get("full_si_sdr", metrics.get("si_sdr"))
+    if val is None:
+        raise RuntimeError(f"existing best {path} has no stored SI-SDR; refuse overwrite")
+    return float(val)
 
 
-def should_write_best(score: float, best: float, init_score: float | None, path: Path) -> bool:
+def should_write_best(
+    score: float | None,
+    best: float,
+    init_score: float | None,
+    path: Path,
+    n: int | None = None,
+) -> bool:
     """Gate writes of the ship ckpt (`ulunas_finetuned.pt` / best).
 
     Decision A: never write best when probe SI-SDR is strictly below init.
     Equal-to-init is allowed. This does not gate `ulunas_last.pt` / last.pt.
-    The existing-best lock (`_existing_best_score`) is unchanged.
+    Decision B: existing-best lock via `_existing_best_score` (fail-closed if unreadable).
+    Empty probes (n==0) never write best.
     """
+    if n is not None and n <= 0:
+        print("skip best ckpt: empty probe (n=0)")
+        return False
+    if score is None:
+        print("skip best ckpt: probe SI-SDR missing")
+        return False
     if init_score is not None and score < init_score:
         print(
             f"skip best ckpt: full-file SI-SDR {score:.3f} is strictly below init {init_score:.3f}"
@@ -108,10 +137,15 @@ def should_write_best(score: float, best: float, init_score: float | None, path:
         return False
     if score <= best:
         return False
-    prev = _existing_best_score(path)
-    if prev is not None and score + 1e-6 < prev:
-        print(f"keep existing {path} SI-SDR={prev:.3f} > {score:.3f}")
-        return False
+    if path.exists():
+        try:
+            prev = _existing_best_score(path)
+        except RuntimeError as exc:
+            print(f"keep existing {path}: {exc}")
+            return False
+        if prev is not None and score + 1e-6 < prev:
+            print(f"keep existing {path} SI-SDR={prev:.3f} > {score:.3f}")
+            return False
     return True
 
 
@@ -125,10 +159,13 @@ def train(args: argparse.Namespace) -> dict:
     max_dev = args.max_dev
     if args.dev_manifests:
         init_full = evaluate_manifest(model, args.dev_manifests[0], device, max_clips=max_dev)
-        print(f"init full-file SI-SDR={init_full['si_sdr']:.3f} n={init_full['n']}")
+        print(f"init full-file SI-SDR={init_full['si_sdr']} n={init_full['n']}")
+        if init_full["n"] <= 0 or init_full["si_sdr"] is None:
+            raise SystemExit("dev probe is empty (n=0); refuse init_score/best writes")
+        init_score = init_full["si_sdr"]
     else:
         init_full = None
-    init_score = None if init_full is None else init_full["si_sdr"]
+        init_score = None
 
     train_set = PairDataset(args.train_manifests, seconds=args.seconds, training=True)
     # Epoch gating uses evaluate_manifest when --dev_manifests is set; do not
@@ -146,7 +183,11 @@ def train(args: argparse.Namespace) -> dict:
 
     history = []
     best_path = out_dir / "ulunas_finetuned.pt"
-    existing = _existing_best_score(best_path)
+    try:
+        existing = _existing_best_score(best_path)
+    except RuntimeError as exc:
+        print(exc)
+        existing = float("inf")
     best = existing if existing is not None else -1e9
     wrote_best = False
     step = 0
@@ -201,8 +242,8 @@ def train(args: argparse.Namespace) -> dict:
             full = evaluate_manifest(model, args.dev_manifests[0], device, max_clips=max_dev)
             metrics["full_si_sdr"] = full["si_sdr"]
             metrics["full_n"] = full["n"]
-            print(f"epoch {epoch} full-file SI-SDR={full['si_sdr']:.3f} n={full['n']}")
-            if should_write_best(full["si_sdr"], best, init_score, best_path):
+            print(f"epoch {epoch} full-file SI-SDR={full['si_sdr']} n={full['n']}")
+            if should_write_best(full["si_sdr"], best, init_score, best_path, n=int(full["n"] or 0)):
                 best = full["si_sdr"]
                 torch.save(
                     {"model": model.state_dict(), "metrics": metrics, "freeze": args.freeze, "init_ckpt": str(args.ckpt)},
@@ -241,7 +282,7 @@ def train(args: argparse.Namespace) -> dict:
         "steps_run": step,
         "device": str(device),
         "cuda_available": torch.cuda.is_available(),
-        "best_si_sdr": best if best > -1e8 else None,
+        "best_si_sdr": best if best > -1e8 and best != float("inf") else None,
         "wrote_best": wrote_best,
         "seconds": time.time() - t0,
         "ckpt": str(best_path) if best_path.exists() else None,
