@@ -23,6 +23,28 @@ VoiceBank+DEMAND (Valentini 28-spk train / 2-spk test), downloaded from Edinburg
 - Download: `python training/download_vbdemand.py`
 - License notes: `training/data/licenses.md`, `training/data/voicebank_demand_LICENSE.md`
 
+### Dual VB-DMD manifest writers (both kept)
+
+Both index the same `find_vbdemand_roots` tree and write
+`training/data/manifests/{train,dev,eval}_vbdemand.jsonl`. They are not
+interchangeable:
+
+- **`prepare_manifest.scan_vbdemand`** — catalog indexer. Run
+  `python training/prepare_manifest.py`. Points at files already under
+  `training/data/raw` (no copy, no resample). Accepts wav/flac/ogg and will
+  rglob for a nested noisy file. Also writes speech/noise/demo/official
+  manifests. Use this whenever you need the full catalog, or when you only
+  need the three VB-DMD JSONLs without `paired_all.jsonl` or 16 kHz copies.
+- **`synthesize_pairs.ingest_public_pairs`** — ingest / optional copy. Run
+  `python training/synthesize_pairs.py --mode ingest`. Wav-only; noisy must
+  be `noisy_dir / wav.name`. Also writes `paired_all.jsonl`. Pass
+  `--copy_paired` to resample/copy into `training/data/processed/vbdemand`.
+  Use this when you want that combined JSONL or materialized 16 kHz copies.
+  It overwrites the three VB-DMD JSONLs if `prepare_manifest` already ran.
+
+`--mode synth` is a different path (tiny bootstrap mixes from `speech.jsonl`)
+and is not a VB-DMD writer.
+
 Counts: 11,572 train pairs + 824 official test pairs at 16 kHz.
 
 | Split | Manifest | n | Speakers |

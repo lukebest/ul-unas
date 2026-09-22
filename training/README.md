@@ -24,6 +24,13 @@ python training/prepare_manifest.py
 python training/synthesize_pairs.py --mode ingest
 ```
 
+Two writers can emit `{train,dev,eval}_vbdemand.jsonl`; keep both:
+
+- `prepare_manifest.scan_vbdemand` (`python training/prepare_manifest.py`) — catalog indexer: points at files already under `training/data/raw` (no copy), wav/flac/ogg + nested-noisy search, and also writes speech/noise/demo/official manifests.
+- `synthesize_pairs.ingest_public_pairs` (`python training/synthesize_pairs.py --mode ingest`) — ingest: wav-only, noisy must match by filename, also writes `paired_all.jsonl`, optional `--copy_paired` 16 kHz copies. Overwrites the three VB-DMD JSONLs if `prepare_manifest` already ran.
+
+`--mode synth` is the tiny bootstrap mixer, not a VB-DMD writer. See `training/experiments/vbdemand_finetune.md`.
+
 - Train / dev / eval JSONL: `training/data/manifests/{train,dev,eval}_vbdemand.jsonl` (repo-relative paths).
 - Dev speakers `p226` and `p287` are held out of the 28-spk train set.
 - Eval is the official Valentini test speakers (`p232`, `p257`).

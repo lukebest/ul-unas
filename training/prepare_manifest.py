@@ -1,4 +1,8 @@
-"""Scan local and optional public dataset roots, then write JSONL manifests."""
+"""Scan local and optional public dataset roots, then write JSONL manifests.
+
+VB-DMD JSONLs: `scan_vbdemand` vs `synthesize_pairs.ingest_public_pairs` —
+both kept; see training/experiments/vbdemand_finetune.md.
+"""
 
 from __future__ import annotations
 
@@ -118,6 +122,18 @@ def find_vbdemand_roots(public_root: Path) -> list[tuple[Path, Path, str]]:
 
 
 def scan_vbdemand(public_root: Path, repo: Path) -> dict[str, list[dict]]:
+    """Index VoiceBank+DEMAND pairs already on disk; do not copy or resample them.
+
+    Use this writer (via `python training/prepare_manifest.py`) to build
+    `{train,dev,eval}_vbdemand.jsonl` as part of the full catalog (speech/noise/
+    demo/official manifests included). Matches clean/noisy by filename under
+    layouts from `find_vbdemand_roots`, including wav/flac/ogg, with an rglob
+    fallback when noisy is nested. Does not write `paired_all.jsonl`.
+
+    The sibling writer is `synthesize_pairs.ingest_public_pairs`: same three
+    VB-DMD JSONLs, plus `paired_all.jsonl` and optional `--copy_paired` 16 kHz
+    copies. Keep both; see `training/experiments/vbdemand_finetune.md`.
+    """
     buckets: dict[str, list[dict]] = {"train": [], "dev": [], "eval": []}
     seen: set[str] = set()
     for clean_dir, noisy_dir, split_hint in find_vbdemand_roots(public_root):

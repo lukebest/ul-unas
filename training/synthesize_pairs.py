@@ -1,4 +1,8 @@
-"""Synthesize strictly paired 16 kHz training clips from speech + target noise."""
+"""Synthesize bootstrap pairs, or ingest public VoiceBank+DEMAND pairs.
+
+VB-DMD JSONLs: `ingest_public_pairs` (`--mode ingest`) vs
+`prepare_manifest.scan_vbdemand` — both kept; see experiments/vbdemand_finetune.md.
+"""
 
 from __future__ import annotations
 
@@ -98,7 +102,17 @@ def maybe_interferer(speech_pool: list[np.ndarray], n: int, rng: np.random.Gener
 
 
 def ingest_public_pairs(args: argparse.Namespace) -> dict:
-    """Write train/dev/eval manifests from public paired 16 kHz (or resampled) data."""
+    """Rewrite VB-DMD train/dev/eval JSONLs from on-disk paired data.
+
+    Use `python training/synthesize_pairs.py --mode ingest` when you need
+    `paired_all.jsonl` and/or `--copy_paired` (resample/copy into
+    `--paired_output_dir`). Wav-only; noisy must sit next to clean by name
+    (no nested rglob). Overwrites `{train,dev,eval}_vbdemand.jsonl`.
+
+    The sibling writer is `prepare_manifest.scan_vbdemand`: same three JSONLs
+    as part of the full catalog, no copy, wav/flac/ogg + nested noisy search.
+    Keep both; see `training/experiments/vbdemand_finetune.md`.
+    """
     repo = Path(args.repo)
     public_root = Path(args.public_root)
     roots = find_vbdemand_roots(public_root)
