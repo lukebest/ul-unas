@@ -36,7 +36,7 @@ If `training/data/raw/` is empty, `synthesize_pairs.py --mode synth` still build
 
 Init **only** from `checkpoints/model_trained_on_dns3.tar`. Do not resume `training/outputs/finetune/ulunas_finetuned.pt`.
 
-Entrypoint is `training/configs/vbdemand.json` (safe defaults: `lr=1e-5`, `w_mag=10`, `w_ri=5`, `w_prot=2`, `max_steps=800`). CLI flags override the JSON. A collapsed run will not overwrite `ulunas_finetuned.pt` if full-file SI-SDR falls more than 2 dB below init.
+Entrypoint is `training/configs/vbdemand.json` (safe defaults: `lr=1e-5`, `w_mag=10`, `w_ri=5`, `w_prot=2`, `max_steps=800`). CLI flags override the JSON. `ulunas_finetuned.pt` (best/ship ckpt) is never written when the probe SI-SDR is strictly below the init SI-SDR. `ulunas_last.pt` is not gated by that check.
 
 ```bash
 python training/train_ulunas.py --config training/configs/vbdemand.json

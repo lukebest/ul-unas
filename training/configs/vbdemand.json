@@ -14,7 +14,6 @@
   "epochs": 1,
   "max_steps": 800,
   "max_dev": 24,
-  "collapse_margin": 2.0,
   "w_mag": 10,
   "w_ri": 5,
   "w_sisnr": 1,

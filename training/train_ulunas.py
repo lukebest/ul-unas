@@ -23,7 +23,6 @@ from training.model_utils import apply_freeze, enhance_numpy, load_ulunas, train
 from training.paths import resolve_audio
 
 CONFIG_DEFAULT = "training/configs/vbdemand.json"
-COLLAPSE_MARGIN_DB = 2.0
 
 
 def default_device() -> str:
@@ -110,10 +109,16 @@ def _existing_best_score(path: Path) -> float | None:
         return None
 
 
-def should_write_best(score: float, best: float, init_score: float | None, margin: float, path: Path) -> bool:
-    if init_score is not None and score < init_score - margin:
+def should_write_best(score: float, best: float, init_score: float | None, path: Path) -> bool:
+    """Gate writes of the ship ckpt (`ulunas_finetuned.pt` / best).
+
+    Decision A: never write best when probe SI-SDR is strictly below init.
+    Equal-to-init is allowed. This does not gate `ulunas_last.pt` / last.pt.
+    The existing-best lock (`_existing_best_score`) is unchanged.
+    """
+    if init_score is not None and score < init_score:
         print(
-            f"skip best ckpt: full-file SI-SDR {score:.3f} is >{margin:.1f} dB below init {init_score:.3f}"
+            f"skip best ckpt: full-file SI-SDR {score:.3f} is strictly below init {init_score:.3f}"
         )
         return False
     if score <= best:
@@ -208,6 +213,7 @@ def train(args: argparse.Namespace) -> dict:
             if step % args.log_every == 0:
                 print(f"step {step} loss={float(loss.detach().cpu()):.4f} kind={kinds[0]}")
             if step % max(args.log_every * 5, 100) == 0:
+                # last.pt is not gated by Decision A (init SI-SDR); always write.
                 torch.save(
                     {"model": model.state_dict(), "step": step, "freeze": args.freeze, "init_ckpt": str(args.ckpt)},
                     out_dir / "ulunas_last.pt",
@@ -220,7 +226,7 @@ def train(args: argparse.Namespace) -> dict:
             metrics["full_si_sdr"] = full["si_sdr"]
             metrics["full_n"] = full["n"]
             print(f"epoch {epoch} full-file SI-SDR={full['si_sdr']:.3f} n={full['n']}")
-            if should_write_best(full["si_sdr"], best, init_score, args.collapse_margin, best_path):
+            if should_write_best(full["si_sdr"], best, init_score, best_path):
                 best = full["si_sdr"]
                 torch.save(
                     {"model": model.state_dict(), "metrics": metrics, "freeze": args.freeze, "init_ckpt": str(args.ckpt)},
@@ -230,7 +236,7 @@ def train(args: argparse.Namespace) -> dict:
         elif dev_loader is not None:
             metrics.update(evaluate_loader(model, dev_loader, device))
             print(f"epoch {epoch} crop SI-SDR={metrics['si_sdr']:.3f}")
-            if should_write_best(metrics["si_sdr"], best, init_score, args.collapse_margin, best_path):
+            if should_write_best(metrics["si_sdr"], best, init_score, best_path):
                 best = metrics["si_sdr"]
                 torch.save(
                     {"model": model.state_dict(), "metrics": metrics, "freeze": args.freeze, "init_ckpt": str(args.ckpt)},
@@ -248,6 +254,7 @@ def train(args: argparse.Namespace) -> dict:
             break
 
     last_path = out_dir / "ulunas_last.pt"
+    # Decision A does not gate last.pt: always write the final weights here.
     torch.save({"model": model.state_dict(), "history": history, "freeze": args.freeze, "init_ckpt": str(args.ckpt)}, last_path)
     report = {
         "init_ckpt": str(args.ckpt),
@@ -312,7 +319,6 @@ def build_parser(cfg: dict | None = None) -> argparse.ArgumentParser:
     p.add_argument("--log_every", type=int, default=50)
     p.add_argument("--num_workers", type=int, default=0)
     p.add_argument("--max_dev", type=int, default=int(g("max_dev", 24)), help="cap in-loop dev clips; 0 = all")
-    p.add_argument("--collapse_margin", type=float, default=float(g("collapse_margin", COLLAPSE_MARGIN_DB)))
     p.add_argument("--use_teacher", action="store_true")
     p.add_argument("--w_teacher", type=float, default=0.2)
     p.add_argument("--w_mag", type=float, default=float(g("w_mag", 10.0)))
