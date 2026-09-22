@@ -1,0 +1,144 @@
+{
+  "ckpt": "training/outputs/finetune_vbdemand/ulunas_finetuned.pt",
+  "device": "cpu",
+  "n_clips": 3,
+  "timing": {
+    "mean_ms": 988.5456686667263,
+    "p50_ms": 929.7115469998971,
+    "p95_ms": 1095.714287100236,
+    "p99_ms": 1110.4700862202662,
+    "max_ms": 1114.1590360002738,
+    "elapsed_s": 2.965637006000179,
+    "audio_s": 183.20875,
+    "rtf": 0.01618720179030848,
+    "frame_budget_ms": 16.0
+  },
+  "by_layer_system": {
+    "chip_loudness_matched": {
+      "game_music": {
+        "clip_rate": 0.0,
+        "duration_s": 60.9596875,
+        "est_dbfs": -45.38216055933675,
+        "mix_dbfs": -45.38216070309897,
+        "proxy_bak": 66.53155713882452,
+        "proxy_bak_improve": 16.62689500311643,
+        "proxy_ovrl": -37.283115438958845,
+        "proxy_sig_dbfs": -41.43983918973795
+      },
+      "all": {
+        "clip_rate": 0.0,
+        "duration_s": 61.069583333333334,
+        "est_dbfs": -44.414238567406045,
+        "mix_dbfs": -44.41423866890327,
+        "proxy_bak": 64.98219154310874,
+        "proxy_bak_improve": 17.147337665327147,
+        "proxy_ovrl": -36.02582187451684,
+        "proxy_sig_dbfs": -40.31265629084863
+      },
+      "gunshot": {
+        "clip_rate": 0.0,
+        "duration_s": 61.3896875,
+        "est_dbfs": -44.85498247707942,
+        "mix_dbfs": -44.85498237897233,
+        "proxy_bak": 66.40701245708938,
+        "proxy_bak_improve": 17.671864133250047,
+        "proxy_ovrl": -36.342292937752596,
+        "proxy_sig_dbfs": -40.760258971065106
+      },
+      "mmo_bgm": {
+        "clip_rate": 0.0,
+        "duration_s": 60.859375,
+        "est_dbfs": -43.00557266580196,
+        "mix_dbfs": -43.005572924638514,
+        "proxy_bak": 62.00800503341231,
+        "proxy_bak_improve": 17.143253859614966,
+        "proxy_ovrl": -34.45205724683908,
+        "proxy_sig_dbfs": -38.73787071174282
+      }
+    },
+    "noisy": {
+      "game_music": {
+        "clip_rate": 0.0,
+        "duration_s": 60.9596875,
+        "est_dbfs": -45.38216070309897,
+        "mix_dbfs": -45.38216070309897,
+        "proxy_bak": 62.69542424014284,
+        "proxy_bak_improve": 0.0,
+        "proxy_ovrl": -41.40450446392783,
+        "proxy_sig_dbfs": -41.40450446392783
+      },
+      "all": {
+        "clip_rate": 0.0,
+        "duration_s": 61.069583333333334,
+        "est_dbfs": -44.41423866890327,
+        "mix_dbfs": -44.41423866890327,
+        "proxy_bak": 61.521024871043814,
+        "proxy_bak_improve": 0.0,
+        "proxy_ovrl": -42.02252563054726,
+        "proxy_sig_dbfs": -42.02252563054726
+      },
+      "gunshot": {
+        "clip_rate": 0.0,
+        "duration_s": 61.3896875,
+        "est_dbfs": -44.85498237897233,
+        "mix_dbfs": -44.85498237897233,
+        "proxy_bak": 61.21525013516734,
+        "proxy_bak_improve": 0.0,
+        "proxy_ovrl": -42.06442722528294,
+        "proxy_sig_dbfs": -42.06442722528294
+      },
+      "mmo_bgm": {
+        "clip_rate": 0.0,
+        "duration_s": 60.859375,
+        "est_dbfs": -43.005572924638514,
+        "mix_dbfs": -43.005572924638514,
+        "proxy_bak": 60.652400237821254,
+        "proxy_bak_improve": 0.0,
+        "proxy_ovrl": -42.598645202431,
+        "proxy_sig_dbfs": -42.598645202431
+      }
+    },
+    "ulunas": {
+      "game_music": {
+        "clip_rate": 0.0,
+        "duration_s": 60.9596875,
+        "est_dbfs": -46.18944678649868,
+        "mix_dbfs": -45.38216070309897,
+        "proxy_bak": 65.26049218151059,
+        "proxy_bak_improve": 8.437376904101306,
+        "proxy_ovrl": -39.42086727280296,
+        "proxy_sig_dbfs": -41.53021149882829
+      },
+      "all": {
+        "clip_rate": 0.0,
+        "duration_s": 61.069583333333334,
+        "est_dbfs": -47.828817074251845,
+        "mix_dbfs": -44.41423866890327,
+        "proxy_bak": 66.07712038460265,
+        "proxy_bak_improve": 14.770349159221823,
+        "proxy_ovrl": -38.68119487941471,
+        "proxy_sig_dbfs": -42.37378216922017
+      },
+      "gunshot": {
+        "clip_rate": 0.0,
+        "duration_s": 61.3896875,
+        "est_dbfs": -46.08132122807685,
+        "mix_dbfs": -44.85498237897233,
+        "proxy_bak": 65.8348315305191,
+        "proxy_bak_improve": 13.31269740766541,
+        "proxy_ovrl": -38.001415215844695,
+        "proxy_sig_dbfs": -41.32958956776105
+      },
+      "mmo_bgm": {
+        "clip_rate": 0.0,
+        "duration_s": 60.859375,
+        "est_dbfs": -51.21568320817998,
+        "mix_dbfs": -43.005572924638514,
+        "proxy_bak": 67.13603744177827,
+        "proxy_bak_improve": 22.56097316589875,
+        "proxy_ovrl": -38.62130214959648,
+        "proxy_sig_dbfs": -44.26154544107117
+      }
+    }
+  }
+}

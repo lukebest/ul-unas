@@ -1,4 +1,4 @@
-"""Summarize SI-SDR / PESQ from one or more evaluate.py metrics.json files."""
+"""Summarize SI-SDR / PESQ from evaluate.py metrics.json or aggregate metrics_summary.json."""
 
 from __future__ import annotations
 
@@ -17,22 +17,33 @@ def _mean(rows: list[dict], key: str) -> float | None:
 def summarize(path: Path, system: str = "ulunas") -> dict:
     report = json.loads(path.read_text(encoding="utf-8"))
     rows = [r for r in report.get("rows", []) if r.get("system") == system]
-    out = {
+    if rows:
+        return {
+            "file": str(path),
+            "ckpt": report.get("ckpt"),
+            "system": system,
+            "n": len(rows),
+            "si_sdr": _mean(rows, "si_sdr"),
+            "si_sdri": _mean(rows, "si_sdri"),
+            "pesq": _mean(rows, "pesq"),
+            "estoi": _mean(rows, "estoi"),
+        }
+    stats = (report.get("by_layer_system") or {}).get(system, {}).get("all") or {}
+    return {
         "file": str(path),
         "ckpt": report.get("ckpt"),
         "system": system,
-        "n": len(rows),
-        "si_sdr": _mean(rows, "si_sdr"),
-        "si_sdri": _mean(rows, "si_sdri"),
-        "pesq": _mean(rows, "pesq"),
-        "estoi": _mean(rows, "estoi"),
+        "n": report.get("n_clips"),
+        "si_sdr": stats.get("si_sdr"),
+        "si_sdri": stats.get("si_sdri"),
+        "pesq": stats.get("pesq"),
+        "estoi": stats.get("estoi"),
     }
-    return out
 
 
 def main() -> None:
     p = argparse.ArgumentParser()
-    p.add_argument("metrics", nargs="+", help="metrics.json from evaluate.py")
+    p.add_argument("metrics", nargs="+", help="metrics.json or metrics_summary.json from evaluate.py")
     p.add_argument("--system", default="ulunas")
     p.add_argument("--out", default="")
     args = p.parse_args()

@@ -51,6 +51,8 @@ def try_pesq(est: np.ndarray, ref: np.ndarray, sr: int = 16000, require: bool = 
         return None
     n = min(len(est), len(ref))
     if n < int(sr * 0.25):
+        if require:
+            raise ValueError(f"PESQ requires >=0.25s audio, got {n / sr:.3f}s")
         return None
     est = np.asarray(est[:n], dtype=np.float64)
     ref = np.asarray(ref[:n], dtype=np.float64)
@@ -62,6 +64,8 @@ def try_pesq(est: np.ndarray, ref: np.ndarray, sr: int = 16000, require: bool = 
         mode = "wb" if sr >= 16000 else "nb"
         return float(pesq_fn(int(sr), ref, est, mode))
     except Exception:
+        if require:
+            raise
         return None
 
 

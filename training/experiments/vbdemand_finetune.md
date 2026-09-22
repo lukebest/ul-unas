@@ -56,10 +56,10 @@ python training/train_ulunas.py \
 
 - **Steps actually run:** 800 (batch 8, 2.0 s crops, freeze `decoder_tail`)
 - **Wall time:** 546 s
-- **Init full-file SI-SDR on 24 dev clips:** 12.068 dB
-- **After 800 steps, same 24-clip probe:** 13.967 dB
+- **Init full-file SI-SDR on 24 speaker-balanced dev clips:** 12.068 dB
+- **After 800 steps, same 24-clip full-file probe:** 13.967 dB
 
-A first attempt at `--lr 1e-4`, paper-scale mag weights (`70/30`), 2 epochs / 2700 steps **collapsed** quality (full-file SI-SDR dropped vs DNS3 on a 8-clip probe). That run is logged in `train_report_lr1e-4_collapsed.json` and was **not** used for the table below.
+A first attempt at `--lr 1e-4`, paper-scale mag weights (`70/30`), 2 epochs / 2700 steps **collapsed** (in-loop **crop** SI-SDR, n=64; a later 8-clip full-file diagnostic also dropped vs DNS3). Logged in `train_report_lr1e-4_collapsed.json`. That run's weights were **overwritten** by the 800-step `lr=1e-5` checkpoint now at `ulunas_finetuned.pt` and were **not** used for the table below.
 
 ## Metrics — held-out VoiceBank+DEMAND test (n = 824)
 
@@ -73,7 +73,7 @@ Measured by `training/evaluate.py` with wideband PESQ. No fabricated numbers.
 
 Delta vs official DNS3: **+1.231 dB SI-SDR**, **+0.030 PESQ**.
 
-Sources: `training/outputs/eval_vbdemand_baseline/metrics.md`, `training/outputs/eval_vbdemand_finetuned/metrics.md`, `training/outputs/finetune_vbdemand/eval_compare.json`.
+Sources: `training/outputs/eval_vbdemand_baseline/metrics.md`, `training/outputs/eval_vbdemand_finetuned/metrics.md`, aggregate `metrics_summary.json` next to each, and `training/outputs/finetune_vbdemand/eval_compare.json`.
 
 ## In-repo demo (held-out, no paired clean)
 

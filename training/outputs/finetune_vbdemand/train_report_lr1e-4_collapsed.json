@@ -13,8 +13,11 @@
   "cuda_available": false,
   "best_si_sdr": -26.872917165962726,
   "seconds": 1719.6478316783905,
-  "ckpt": "training/outputs/finetune_vbdemand/ulunas_finetuned.pt",
-  "last_ckpt": "training/outputs/finetune_vbdemand/ulunas_last.pt",
+  "ckpt": null,
+  "discarded": true,
+  "probe": "in-loop crop SI-SDR, n=64 (not 8; not the later 24-clip full-file probe)",
+  "note": "Collapsed lr=1e-4 2700-step run. Its weights were overwritten by the later lr=1e-5 800-step run now at training/outputs/finetune_vbdemand/ulunas_finetuned.pt. Do not treat that path as this run.",
+  "last_ckpt": "training/outputs/finetune_vbdemand/ulunas_last.pt (also overwritten by the 800-step run)",
   "train_manifests": [
     "training/data/manifests/train_vbdemand.jsonl"
   ],
