@@ -43,7 +43,9 @@ interchangeable:
   It overwrites the three VB-DMD JSONLs if `prepare_manifest` already ran.
 
 `--mode synth` is a different path (tiny bootstrap mixes from `speech.jsonl`)
-and is not a VB-DMD writer.
+and is not a VB-DMD writer. Default `--mode auto` (unchanged) selects ingest
+when `find_vbdemand_roots` is non-empty and skips synth; pass `--mode synth`
+or `--mode both` to run the mixer.
 
 Counts: 11,572 train pairs + 824 official test pairs at 16 kHz.
 

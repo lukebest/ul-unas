@@ -2,6 +2,10 @@
 
 VB-DMD JSONLs: `ingest_public_pairs` (`--mode ingest`) vs
 `prepare_manifest.scan_vbdemand` — both kept; see experiments/vbdemand_finetune.md.
+
+Default `--mode auto`: ingest when `find_vbdemand_roots` is non-empty, else
+synth. Auto does not run synth when VB raw roots exist; use `--mode synth`
+or `--mode both` for the bootstrap mixer.
 """
 
 from __future__ import annotations
@@ -312,7 +316,13 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--manifest_out", default="training/data/manifests/synth_all.jsonl")
     p.add_argument("--public_root", default="training/data/raw")
     p.add_argument("--paired_output_dir", default="training/data/processed/vbdemand")
-    p.add_argument("--mode", default="auto", choices=["auto", "synth", "ingest", "both"])
+    p.add_argument(
+        "--mode",
+        default="auto",
+        choices=["auto", "synth", "ingest", "both"],
+        help="default auto: ingest if find_vbdemand_roots is non-empty, else synth "
+        "(skips synth unless --mode synth/both)",
+    )
     p.add_argument("--copy_paired", action="store_true", help="Resample/copy public pairs into paired_output_dir")
     p.add_argument("--seconds", type=float, default=4.0)
     p.add_argument("--n_train", type=int, default=40)
