@@ -1,0 +1,9 @@
+torch
+einops
+numpy
+scipy
+soundfile
+pesq
+pystoi
+huggingface_hub
+tqdm

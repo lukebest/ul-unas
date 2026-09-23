@@ -74,17 +74,20 @@ def total_loss(
     w_noise: float = 5.0,
     w_prot: float = 8.0,
     w_teacher: float = 0.2,
+    w_mag: float = 70.0,
+    w_ri: float = 30.0,
+    w_sisnr: float = 1.0,
 ) -> dict[str, torch.Tensor]:
     if kind == "noise_only":
         l = noise_only_loss(est) * w_noise
         return {"loss": l, "l_noise": l}
     if kind == "clean_only":
-        l_h = hybrid_loss(est, ref)
+        l_h = hybrid_loss(est, ref, w_mag=w_mag, w_ri=w_ri, w_sisnr=w_sisnr)
         l_id = identity_loss(est, mix) * w_id
         out = {**l_h, "l_id": l_id}
         out["loss"] = l_h["loss"] + l_id
         return out
-    out = hybrid_loss(est, ref)
+    out = hybrid_loss(est, ref, w_mag=w_mag, w_ri=w_ri, w_sisnr=w_sisnr)
     out["l_prot"] = speech_protection_loss(est, ref) * w_prot
     out["loss"] = out["loss"] + out["l_prot"]
     if teacher is not None:

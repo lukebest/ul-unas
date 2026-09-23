@@ -10,6 +10,7 @@ import torch
 from torch.utils.data import Dataset, WeightedRandomSampler
 
 from training.audio_io import load_mono
+from training.paths import resolve_audio
 
 
 def read_jsonl(path: str | Path) -> list[dict]:
@@ -20,14 +21,35 @@ def read_jsonl(path: str | Path) -> list[dict]:
 
 
 class PairDataset(Dataset):
-    def __init__(self, manifests: list[str | Path], seconds: float = 4.0, sr: int = 16000):
+    def __init__(
+        self,
+        manifests: list[str | Path],
+        seconds: float = 4.0,
+        sr: int = 16000,
+        training: bool = False,
+    ):
         self.rows: list[dict] = []
         for man in manifests:
             for row in read_jsonl(man):
                 if row.get("held_out"):
                     continue
+                if training and row.get("use_for_training") is False:
+                    continue
                 if not row.get("noisy"):
                     continue
+                noisy_p = resolve_audio(row["noisy"])
+                if not noisy_p.exists():
+                    continue
+                row = dict(row)
+                row["noisy"] = str(noisy_p)
+                if row.get("clean"):
+                    clean_p = resolve_audio(row["clean"])
+                    if not clean_p.exists():
+                        continue
+                    row["clean"] = str(clean_p)
+                if row.get("teacher"):
+                    teacher_p = resolve_audio(row["teacher"])
+                    row["teacher"] = str(teacher_p) if teacher_p.exists() else None
                 self.rows.append(row)
         if not self.rows:
             raise ValueError("PairDataset is empty")

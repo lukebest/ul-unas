@@ -1,0 +1,43 @@
+{
+  "init_ckpt": "checkpoints/model_trained_on_dns3.tar",
+  "trainable": 106122,
+  "total": 171328,
+  "freeze": "decoder_tail",
+  "lr": 0.0001,
+  "batch_size": 8,
+  "seconds_per_clip": 2.0,
+  "epochs": 2,
+  "max_steps": 0,
+  "steps_run": 2700,
+  "device": "cpu",
+  "cuda_available": false,
+  "best_si_sdr": -26.872917165962726,
+  "seconds": 1719.6478316783905,
+  "ckpt": null,
+  "discarded": true,
+  "probe": "in-loop crop SI-SDR, n=64 (not 8; not the later 24-clip full-file probe)",
+  "note": "Collapsed lr=1e-4 2700-step run. Its weights were overwritten by the later lr=1e-5 800-step run now at training/outputs/finetune_vbdemand/ulunas_finetuned.pt. Do not treat that path as this run.",
+  "last_ckpt": "training/outputs/finetune_vbdemand/ulunas_last.pt (also overwritten by the 800-step run)",
+  "train_manifests": [
+    "training/data/manifests/train_vbdemand.jsonl"
+  ],
+  "dev_manifests": [
+    "training/data/manifests/dev_vbdemand.jsonl"
+  ],
+  "history": [
+    {
+      "epoch": 0,
+      "step": 1350,
+      "train_loss": 34.79940414428711,
+      "si_sdr": -26.872917165962726,
+      "n": 64
+    },
+    {
+      "epoch": 1,
+      "step": 2700,
+      "train_loss": 32.04329299926758,
+      "si_sdr": -27.38998515532826,
+      "n": 64
+    }
+  ]
+}

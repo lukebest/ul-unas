@@ -4,6 +4,9 @@
   "eval_real": 3,
   "eval_official": 2,
   "eval_clean": 2,
+  "train_vbdemand": 10802,
+  "dev_vbdemand": 770,
+  "eval_vbdemand": 824,
   "public_root": "training/data/raw",
-  "notes": "Demo 降噪前/后 clips are held-out real tests and must not be used for training selection."
+  "notes": "Demo 降噪前/后 clips are held-out real tests and must not be used for training. In-repo official_paired clips are also held-out. VoiceBank+DEMAND eval is the official test speakers."
 }

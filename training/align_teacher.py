@@ -16,6 +16,7 @@ if str(ROOT) not in sys.path:
 
 from training import HOP_LEN, N_FFT, SAMPLE_RATE
 from training.audio_io import frame_rms, load_mono, stft_np, write_wav
+from training.paths import repo_rel, resolve_audio
 
 
 def gcc_phat_delay(x: np.ndarray, y: np.ndarray, max_lag: int) -> tuple[int, float]:
@@ -117,8 +118,8 @@ def align_one(noisy_path: Path, teacher_path: Path, out_dir: Path, min_corr: flo
     keep = corr >= min_corr and clip < 0.02 and abs(b) < 2e-4
     rec = {
         "id": noisy_path.stem,
-        "noisy": str(noisy_path.resolve()),
-        "teacher_raw": str(teacher_path.resolve()),
+        "noisy": repo_rel(noisy_path),
+        "teacher_raw": repo_rel(teacher_path),
         "delay_s": delay,
         "drift": b,
         "env_delay_s": env_delay,
@@ -133,9 +134,9 @@ def align_one(noisy_path: Path, teacher_path: Path, out_dir: Path, min_corr: flo
         write_wav(out_wav, aligned, SAMPLE_RATE)
         mask = magnitude_mask(mix, aligned)
         np.save(out_dir / f"{noisy_path.stem}_teacher_mask.npy", mask)
-        rec["teacher_aligned"] = str(out_wav.resolve())
-        rec["mask_path"] = str((out_dir / f"{noisy_path.stem}_teacher_mask.npy").resolve())
-        rec["noisy_aligned"] = str(noisy_path.resolve())
+        rec["teacher_aligned"] = repo_rel(out_wav)
+        rec["mask_path"] = repo_rel(out_dir / f"{noisy_path.stem}_teacher_mask.npy")
+        rec["noisy_aligned"] = repo_rel(noisy_path)
     return rec
 
 
@@ -148,7 +149,7 @@ def run(args: argparse.Namespace) -> dict:
     for item in items:
         if not item.get("teacher"):
             continue
-        rows.append(align_one(Path(item["noisy"]), Path(item["teacher"]), out_dir, args.min_corr))
+        rows.append(align_one(resolve_audio(item["noisy"]), resolve_audio(item["teacher"]), out_dir, args.min_corr))
     keep = [r for r in rows if r.get("keep")]
     manifest = []
     for r in keep:

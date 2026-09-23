@@ -1,4 +1,12 @@
-"""Synthesize strictly paired 16 kHz training clips from speech + target noise."""
+"""Synthesize bootstrap pairs, or ingest public VoiceBank+DEMAND pairs.
+
+VB-DMD JSONLs: `ingest_public_pairs` (`--mode ingest`) vs
+`prepare_manifest.scan_vbdemand` — both kept; see experiments/vbdemand_finetune.md.
+
+Default `--mode auto`: ingest when `find_vbdemand_roots` is non-empty, else
+synth. Auto does not run synth when VB raw roots exist; use `--mode synth`
+or `--mode both` for the bootstrap mixer.
+"""
 
 from __future__ import annotations
 
@@ -15,6 +23,8 @@ if str(ROOT) not in sys.path:
 
 from training.audio_io import apply_rir, load_mono, mix_at_snr, random_eq, soft_clip, write_wav
 from training import SAMPLE_RATE
+from training.paths import repo_rel, resolve_audio
+from training.prepare_manifest import DEV_SPEAKERS, find_vbdemand_roots, speaker_id, write_jsonl_skip_empty
 
 
 def read_jsonl(path: Path) -> list[dict]:
@@ -95,6 +105,97 @@ def maybe_interferer(speech_pool: list[np.ndarray], n: int, rng: np.random.Gener
     return 0.35 * crop_or_tile(other, n, rng)
 
 
+def ingest_public_pairs(args: argparse.Namespace) -> dict:
+    """Rewrite VB-DMD train/dev/eval JSONLs from on-disk paired data.
+
+    Use `python training/synthesize_pairs.py --mode ingest` when you need
+    `paired_all.jsonl` and/or `--copy_paired` (resample/copy into
+    `--paired_output_dir`). Wav-only; noisy must sit next to clean by name
+    (no nested rglob). Overwrites `{train,dev,eval}_vbdemand.jsonl`.
+
+    The sibling writer is `prepare_manifest.scan_vbdemand`: same three JSONLs
+    as part of the full catalog, no copy, wav/flac/ogg + nested noisy search.
+    Keep both; see `training/experiments/vbdemand_finetune.md`.
+    """
+    repo = Path(args.repo)
+    public_root = Path(args.public_root)
+    roots = find_vbdemand_roots(public_root)
+    if not roots:
+        print("no public paired VoiceBank+DEMAND layout found; skip ingest")
+        return {"n": 0, "mode": "ingest", "by_split": {}}
+
+    out_root = Path(args.paired_output_dir)
+    written: list[dict] = []
+    seen: set[str] = set()
+    copy_audio = bool(args.copy_paired)
+    for clean_dir, noisy_dir, split_hint in roots:
+        for wav in sorted(clean_dir.rglob("*.wav")):
+            noisy = noisy_dir / wav.name
+            if not noisy.exists():
+                continue
+            utt = wav.stem
+            key = f"{split_hint}:{utt}"
+            if key in seen:
+                continue
+            seen.add(key)
+            spk = speaker_id(utt)
+            if split_hint == "test":
+                split = "test"
+                held_out = True
+            elif split_hint == "dev" or spk in DEV_SPEAKERS:
+                split = "dev"
+                held_out = False
+            else:
+                split = "train"
+                held_out = False
+            if copy_audio:
+                noisy_out = out_root / split / "noisy" / f"{utt}.wav"
+                clean_out = out_root / split / "clean" / f"{utt}.wav"
+                mix, sr = load_mono(noisy)
+                target, _ = load_mono(wav)
+                n = min(len(mix), len(target))
+                write_wav(noisy_out, mix[:n], SAMPLE_RATE)
+                write_wav(clean_out, target[:n], SAMPLE_RATE)
+                noisy_path, clean_path = noisy_out, clean_out
+            else:
+                noisy_path, clean_path = noisy, wav
+            written.append(
+                {
+                    "id": utt,
+                    "noisy": repo_rel(noisy_path, repo),
+                    "clean": repo_rel(clean_path, repo),
+                    "layer": "vbdemand",
+                    "split": split,
+                    "scene": "speech_enhancement",
+                    "source": "VoiceBank+DEMAND",
+                    "source_id": f"{spk}/{utt}",
+                    "speaker": spk,
+                    "held_out": held_out,
+                    "use_for_training": split == "train" and not held_out,
+                    "sr": SAMPLE_RATE,
+                }
+            )
+
+    written.sort(key=lambda r: (r["split"], r["id"]))
+    man_dir = Path(args.manifest_out).parent
+    write_jsonl(Path(args.manifest_out).with_name("paired_all.jsonl"), written)
+    train_rows = [r for r in written if r["split"] == "train"]
+    dev_rows = [r for r in written if r["split"] == "dev"]
+    eval_rows = [r for r in written if r["split"] == "test"]
+    n_train = write_jsonl_skip_empty(man_dir / "train_vbdemand.jsonl", train_rows)
+    n_dev = write_jsonl_skip_empty(man_dir / "dev_vbdemand.jsonl", dev_rows)
+    n_eval = write_jsonl_skip_empty(man_dir / "eval_vbdemand.jsonl", eval_rows)
+    summary = {
+        "n": n_train + n_dev + n_eval,
+        "mode": "ingest",
+        "by_split": {"train": n_train, "dev": n_dev, "test": n_eval},
+        "copy_audio": copy_audio,
+        "scanned": len(written),
+    }
+    print(json.dumps(summary, indent=2))
+    return summary
+
+
 def synthesize(args: argparse.Namespace) -> dict:
     rng = np.random.default_rng(args.seed)
     repo = Path(args.repo)
@@ -105,7 +206,7 @@ def synthesize(args: argparse.Namespace) -> dict:
     speech_audio = []
     speech_meta = []
     for row in speech_rows:
-        wav, _ = load_mono(row["path"])
+        wav, _ = load_mono(resolve_audio(row["path"]))
         speech_audio.append(wav)
         speech_meta.append(row)
 
@@ -172,8 +273,8 @@ def synthesize(args: argparse.Namespace) -> dict:
             written.append(
                 {
                     "id": stem,
-                    "noisy": str(noisy_path.resolve()),
-                    "clean": str(clean_path.resolve()),
+                    "noisy": repo_rel(noisy_path),
+                    "clean": repo_rel(clean_path),
                     "layer": scene if scene != "noise_only" else "synthetic",
                     "split": split,
                     "snr_db": snr,
@@ -193,12 +294,36 @@ def synthesize(args: argparse.Namespace) -> dict:
     return summary
 
 
+def run(args: argparse.Namespace) -> dict:
+    mode = args.mode
+    if mode == "auto":
+        roots = find_vbdemand_roots(Path(args.public_root))
+        mode = "ingest" if roots else "synth"
+        print(f"synthesize_pairs mode=auto -> {mode}")
+    out: dict = {"mode": mode}
+    if mode in {"ingest", "both"}:
+        out["ingest"] = ingest_public_pairs(args)
+    if mode in {"synth", "both"}:
+        out["synth"] = synthesize(args)
+    return out
+
+
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser()
     p.add_argument("--repo", default=str(ROOT))
     p.add_argument("--speech_manifest", default="training/data/manifests/speech.jsonl")
     p.add_argument("--output_dir", default="training/data/synth")
     p.add_argument("--manifest_out", default="training/data/manifests/synth_all.jsonl")
+    p.add_argument("--public_root", default="training/data/raw")
+    p.add_argument("--paired_output_dir", default="training/data/processed/vbdemand")
+    p.add_argument(
+        "--mode",
+        default="auto",
+        choices=["auto", "synth", "ingest", "both"],
+        help="default auto: ingest if find_vbdemand_roots is non-empty, else synth "
+        "(skips synth unless --mode synth/both)",
+    )
+    p.add_argument("--copy_paired", action="store_true", help="Resample/copy public pairs into paired_output_dir")
     p.add_argument("--seconds", type=float, default=4.0)
     p.add_argument("--n_train", type=int, default=40)
     p.add_argument("--n_dev", type=int, default=10)
@@ -208,4 +333,4 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 if __name__ == "__main__":
-    synthesize(build_parser().parse_args())
+    run(build_parser().parse_args())

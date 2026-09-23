@@ -1,0 +1,38 @@
+{
+  "init_ckpt": "checkpoints/model_trained_on_dns3.tar",
+  "trainable": 106122,
+  "total": 171328,
+  "freeze": "decoder_tail",
+  "lr": 1e-05,
+  "w_mag": 10.0,
+  "w_ri": 5.0,
+  "w_sisnr": 1.0,
+  "w_prot": 2.0,
+  "init_full_si_sdr": 12.068,
+  "batch_size": 8,
+  "seconds_per_clip": 2.0,
+  "epochs": 1,
+  "max_steps": 800,
+  "steps_run": 800,
+  "device": "cpu",
+  "cuda_available": false,
+  "best_si_sdr": 13.96742564821618,
+  "seconds": 546.1891527175903,
+  "ckpt": "training/outputs/finetune_vbdemand/ulunas_finetuned.pt",
+  "last_ckpt": "training/outputs/finetune_vbdemand/ulunas_last.pt",
+  "train_manifests": [
+    "training/data/manifests/train_vbdemand.jsonl"
+  ],
+  "dev_manifests": [
+    "training/data/manifests/dev_vbdemand.jsonl"
+  ],
+  "history": [
+    {
+      "epoch": 0,
+      "step": 800,
+      "train_loss": 41.519569396972656,
+      "full_si_sdr": 13.96742564821618,
+      "full_n": 24
+    }
+  ]
+}

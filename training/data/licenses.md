@@ -28,6 +28,24 @@ Record source URL, creator, asset license, dataset license, commercial_allowed, 
 
 WHAM! (CC BY-NC), TAU Urban Acoustic Scenes (non-commercial), PUBG Gun Sound Dataset (research only), Primewords (CC BY-NC-ND), MTG-Jamendo (non-commercial academic).
 
+## VoiceBank+DEMAND (used by T-ulunas-posttrain-001)
+
+| Dataset | URL | License note |
+|---|---|---|
+| Valentini noisy-clean parallel set | https://doi.org/10.7488/ds/2117 | Edinburgh DataShare item; End-user Licence on the handle page. Citation: Valentini-Botinhao, C. (2017). |
+| CSTR VCTK (clean speech) | https://doi.org/10.7488/ds/1994 | CC BY 4.0 |
+| DEMAND (noise) | https://zenodo.org/records/1227121 | CC BY-SA 3.0 |
+| 16 kHz HF mirror (opt-in only) | https://huggingface.co/datasets/JacobLinCool/VoiceBank-DEMAND-16k | Declared CC BY 4.0; resample of the same Valentini pairs. **Not used unless** `--allow_hf_fallback`. Prefer official DataShare zips (End-user Licence). |
+
+Download + 16 kHz resample:
+
+```bash
+python training/download_vbdemand.py --output_dir training/data/raw/voicebank_demand
+# Official DataShare only. Add --allow_hf_fallback to opt in to the HF 16 kHz mirror.
+```
+
+WAV files stay under `training/data/raw/` (gitignored). A local `LICENSE.md` is written next to the data. This repo uses the set for a **research fine-tune** of UL-UNAS, not as a commercially cleared product model.
+
 ## Local fallback used by this repo
 
 If `training/data/raw/` is empty, `synthesize_pairs.py` builds a runnable bootstrap set from:

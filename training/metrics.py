@@ -42,6 +42,33 @@ def residual_energy(est: np.ndarray, ref: np.ndarray, mix: np.ndarray, sr: int =
     }
 
 
+def try_pesq(est: np.ndarray, ref: np.ndarray, sr: int = 16000, require: bool = False) -> float | None:
+    try:
+        from pesq import pesq as pesq_fn
+    except ImportError:
+        if require:
+            raise
+        return None
+    n = min(len(est), len(ref))
+    if n < int(sr * 0.25):
+        if require:
+            raise ValueError(f"PESQ requires >=0.25s audio, got {n / sr:.3f}s")
+        return None
+    est = np.asarray(est[:n], dtype=np.float64)
+    ref = np.asarray(ref[:n], dtype=np.float64)
+    peak = max(np.max(np.abs(est)), np.max(np.abs(ref)), 1e-8)
+    if peak > 1.0:
+        est = est / peak
+        ref = ref / peak
+    try:
+        mode = "wb" if sr >= 16000 else "nb"
+        return float(pesq_fn(int(sr), ref, est, mode))
+    except Exception:
+        if require:
+            raise
+        return None
+
+
 def try_estoi(est: np.ndarray, ref: np.ndarray, sr: int = 16000) -> float | None:
     try:
         from pystoi import stoi
