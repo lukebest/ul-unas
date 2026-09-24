@@ -2,7 +2,7 @@
 
 - checkpoint: `/workspace/training/outputs/finetune_vbdemand/ulunas_finetuned.pt`
 - RTF: 0.0465
-- mean / p99 clip time: 93.1 / 109.0 ms
+- mean / p99 clip time: 93.0 / 100.5 ms
 
 ## Layer averages
 

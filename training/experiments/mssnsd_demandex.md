@@ -164,7 +164,7 @@ Sources: `training/outputs/domain_expand_eval_compare.json`,
 | Set | ckpt | n | SI-SDR | SI-SDRi | PESQ | ESTOI |
 |---|---|---|---|---|---|---|
 | MS-SNSD-style test (init) | `finetune_vbdemand/ulunas_finetuned.pt` | 2 | 16.01 | **+3.63** | 2.51 | 0.80 |
-| MS-SNSD-style test (4-step CPU) | `finetune_mssnsd_demandex/ulunas_finetuned.pt` | 2 | 16.01 | **+3.63** | 2.51 | 0.80 |
+| MS-SNSD-style test (4-step CPU) | `finetune_mssnsd_demandex/ulunas_last.pt` | 2 | 16.01 | **+3.63** | 2.51 | 0.80 |
 | DemandEx fixture (init) | `finetune_vbdemand/ulunas_finetuned.pt` | 3 | 14.03 | **+4.31** | 2.71 | 0.87 |
 | in-repo official_paired (init) | `finetune_vbdemand/ulunas_finetuned.pt` | 2 | 6.75 | **+5.34** | 1.88 | 0.65 |
 

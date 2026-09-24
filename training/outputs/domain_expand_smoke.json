@@ -56,13 +56,13 @@
     "last_ckpt": "training/outputs/finetune_mssnsd_demandex/ulunas_last.pt"
   },
   "eval_new_domain": {
-    "rtf": 0.03525902575000828,
+    "rtf": 0.03297980450003024,
     "systems": [
       "noisy",
       "ulunas"
     ],
     "init_si_sdri": 3.634238349066547,
-    "cand_si_sdri": 3.629416175175373,
+    "cand_si_sdri": 3.6327052032019544,
     "g2_metrics": "training/outputs/eval_mssnsd_smoke/metrics_summary.json"
   },
   "gates": {
@@ -72,7 +72,7 @@
       "G1"
     ]
   },
-  "candidate_ckpt": "training/outputs/finetune_mssnsd_demandex/ulunas_finetuned.pt",
+  "candidate_ckpt": "training/outputs/finetune_mssnsd_demandex/ulunas_last.pt",
   "smoke_manifests": "training/data/smoke/manifests",
   "gpu_acceptance_claimed": false
 }

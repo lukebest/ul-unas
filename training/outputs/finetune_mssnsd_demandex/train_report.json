@@ -19,7 +19,7 @@
   "cuda_available": false,
   "best_si_sdr": 14.963543097291922,
   "wrote_best": false,
-  "seconds": 0.8934326171875,
+  "seconds": 0.890122652053833,
   "ckpt": "training/outputs/finetune_mssnsd_demandex/ulunas_finetuned.pt",
   "last_ckpt": "training/outputs/finetune_mssnsd_demandex/ulunas_last.pt",
   "train_manifests": [
@@ -33,8 +33,8 @@
     {
       "epoch": 0,
       "step": 4,
-      "train_loss": 29.658123016357422,
-      "full_si_sdr": 14.958700070968433,
+      "train_loss": 22.83038330078125,
+      "full_si_sdr": 14.954891267133643,
       "full_n": 2
     }
   ]

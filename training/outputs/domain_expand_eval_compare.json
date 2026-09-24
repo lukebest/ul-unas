@@ -12,13 +12,13 @@
     },
     {
       "file": "training/outputs/eval_mssnsd_smoke/metrics_summary.json",
-      "ckpt": "training/outputs/finetune_mssnsd_demandex/ulunas_finetuned.pt",
+      "ckpt": "training/outputs/finetune_mssnsd_demandex/ulunas_last.pt",
       "system": "ulunas",
       "n": 2,
-      "si_sdr": 16.00657203073829,
-      "si_sdri": 3.629416175175373,
-      "pesq": 2.5085136890411377,
-      "estoi": 0.8041065681855168
+      "si_sdr": 16.009861058764873,
+      "si_sdri": 3.6327052032019544,
+      "pesq": 2.509284734725952,
+      "estoi": 0.8041771536905684
     },
     {
       "file": "training/outputs/eval_official_init/metrics_summary.json",
@@ -44,7 +44,7 @@
     },
     {
       "file": "training/outputs/eval_mssnsd_smoke/metrics_summary.json",
-      "ckpt": "training/outputs/finetune_mssnsd_demandex/ulunas_finetuned.pt",
+      "ckpt": "training/outputs/finetune_mssnsd_demandex/ulunas_last.pt",
       "system": "noisy",
       "n": 2,
       "si_sdr": 12.377155855562918,
@@ -60,7 +60,7 @@
       "si_sdr": 1.4135878397297228,
       "si_sdri": 0.0,
       "pesq": 1.0668752193450928,
-      "estoi": 0.5167226566442464
+      "estoi": 0.5167226566442465
     }
   ]
 }
