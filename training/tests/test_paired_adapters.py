@@ -134,6 +134,37 @@ class LayoutTests(unittest.TestCase):
             self.assertEqual({s for _, _, s in roots}, {"train", "dev", "test"})
 
 
+class CandidateCkptTests(unittest.TestCase):
+    def test_locked_best_prefers_this_run_last(self):
+        from training.run_domain_expand_smoke import _candidate_ckpt
+
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            init = root / "init.pt"
+            locked = root / "ulunas_finetuned.pt"
+            last = root / "ulunas_last.pt"
+            for p in (init, locked, last):
+                p.write_bytes(b"x")
+            report = {
+                "wrote_best": False,
+                "ckpt": str(locked),
+                "last_ckpt": str(last),
+            }
+            self.assertEqual(_candidate_ckpt(report, str(init)), str(last))
+            self.assertIsNone(
+                _candidate_ckpt({"wrote_best": False, "ckpt": str(locked)}, str(init))
+            )
+            fresh = root / "fresh_best.pt"
+            fresh.write_bytes(b"y")
+            self.assertEqual(
+                _candidate_ckpt(
+                    {"wrote_best": True, "ckpt": str(fresh), "last_ckpt": str(last)},
+                    str(init),
+                ),
+                str(fresh),
+            )
+
+
 class FrozenRulesTests(unittest.TestCase):
     def test_mode_auto_default(self):
         args = synth_parser().parse_args([])

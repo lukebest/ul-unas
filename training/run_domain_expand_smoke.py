@@ -19,23 +19,35 @@ from training.continue_init import describe_init, resolve_continue_init
 
 
 def _candidate_ckpt(train_report: dict | None, init_ckpt: str) -> str | None:
-    """Real continue-train weights only. Never fall back to init for G2."""
+    """This-run continue-train weights only. Never fall back to init for G2.
+
+    When Rule B locks best (`wrote_best` is false), do not prefer a pre-existing
+    `ulunas_finetuned.pt`. Prefer this-run `last_ckpt`, or fail closed if neither
+    a this-run last nor a freshly written best exists.
+    """
     if not train_report:
         return None
     try:
         init_res = Path(init_ckpt).resolve()
     except OSError:
         init_res = None
-    for key in ("ckpt", "last_ckpt"):
-        raw = train_report.get(key)
+
+    def _usable(raw: object) -> str | None:
         if not raw:
-            continue
-        path = Path(raw)
+            return None
+        path = Path(str(raw))
         if not path.is_file():
-            continue
+            return None
         if init_res is not None and path.resolve() == init_res:
-            continue
+            return None
         return str(path)
+
+    wrote_best = bool(train_report.get("wrote_best"))
+    keys = ("ckpt", "last_ckpt") if wrote_best else ("last_ckpt",)
+    for key in keys:
+        hit = _usable(train_report.get(key))
+        if hit:
+            return hit
     return None
 
 
