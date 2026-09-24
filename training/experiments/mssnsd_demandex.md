@@ -123,15 +123,48 @@ python training/eval_gates.py \
 ## Smoke (this box)
 
 `python training/run_domain_expand_smoke.py` synthesizes a few minutes of
-MS-SNSD-style pairs from `audio/clean`, writes a tiny DemandEx zip-name
-fixture, ingests both, continue-trains a handful of CPU steps from
-`finetune_vbdemand/ulunas_finetuned.pt`, evals the new-domain test, and runs
-G0–G5.
+MS-SNSD-style pairs from `audio/clean` + procedural noise, writes a tiny
+DemandEx zip-name fixture (speech, not tones), ingests both, continue-trains a
+handful of CPU steps from `finetune_vbdemand/ulunas_finetuned.pt`, evals the
+new-domain test, and runs G0–G5.
 
-**CUDA:** see the smoke JSON `cuda_available`. If false, this is a **CPU
-pipeline + smoke** landing. Do **not** treat it as GPU acceptance. G1 on the
-full Valentini test is **skipped** when `training/data/raw/voicebank_demand/`
-wavs are absent (gitignored).
+**CUDA:** `torch.cuda.is_available() == False` on the landing box. This is a
+**CPU pipeline + smoke** only. Do **not** treat it as GPU acceptance. The
+4-step continue-train is not a quality run (probe 14.954 → 14.964 dB on n=2
+MS-SNSD-style dev; new-domain SI-SDRi essentially flat vs init).
+
+**G1** on official Valentini test (n=824) is **skipped**: `training/data/raw/voicebank_demand/`
+wavs are gitignored and not on disk. PR #1 held-out numbers remain the VB
+baseline (do not re-claim them as this run):
+
+| System (PR #1, n=824) | SI-SDR | PESQ |
+|---|---|---|
+| official DNS3 | 15.99 | 2.52 |
+| finetuned VB-DMD | **17.22** | **2.55** |
+
+### Measured this landing (CPU)
+
+Sources: `training/outputs/domain_expand_eval_compare.json`,
+`training/outputs/eval_gates_mssnsd_demandex.json`,
+`training/outputs/domain_expand_smoke.json`.
+
+| Set | ckpt | n | SI-SDR | SI-SDRi | PESQ | ESTOI |
+|---|---|---|---|---|---|---|
+| MS-SNSD-style test (init) | `finetune_vbdemand/ulunas_finetuned.pt` | 2 | 16.01 | **+3.63** | 2.51 | 0.80 |
+| MS-SNSD-style test (4-step CPU) | `finetune_mssnsd_demandex/ulunas_finetuned.pt` | 2 | 16.01 | **+3.63** | 2.51 | 0.80 |
+| DemandEx fixture (init) | `finetune_vbdemand/ulunas_finetuned.pt` | 3 | 14.03 | **+4.31** | 2.71 | 0.87 |
+| in-repo official_paired (init) | `finetune_vbdemand/ulunas_finetuned.pt` | 2 | 6.75 | **+5.34** | 1.88 | 0.65 |
+
+RTF (CPU, MS-SNSD-style eval): **0.037**; frame budget 16 ms.
+
+| Gate | Result |
+|---|---|
+| G0 data | **pass** (mssnsd 14/2/2, demandex 3/3/3, 0 unresolved clean) |
+| G1 VB n=824 | **skip** (raw VB wavs absent) |
+| G2 new-domain SI-SDRi>0 | **pass** (+3.63 MS-SNSD-style; +4.31 DemandEx fixture) |
+| G3 probe lock A/B | **pass** |
+| G4 RTF smoke | **pass** (CPU) |
+| G5 scope | **pass** (auto default, A/B/C needles, no DNS/URGENT downloader) |
 
 ## Out of scope
 

@@ -236,8 +236,13 @@ def run(args: argparse.Namespace) -> dict:
     decided = [g for g in gates if g.get("ok") is not None]
     skipped = [g["id"] for g in gates if g.get("ok") is None]
     failed = [g["id"] for g in decided if not g["ok"]]
+    init_path = resolve_continue_init(repo)
+    try:
+        init_rel = init_path.resolve().relative_to(repo.resolve()).as_posix()
+    except ValueError:
+        init_rel = str(init_path)
     report = {
-        "init_ckpt": str(resolve_continue_init(repo)),
+        "init_ckpt": init_rel,
         "gates": {g["id"]: g for g in gates},
         "failed": failed,
         "skipped": skipped,

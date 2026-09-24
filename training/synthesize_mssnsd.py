@@ -87,13 +87,16 @@ def speech_noise_pools(args: argparse.Namespace) -> tuple[list[np.ndarray], list
         speech = load_pool(_iter_wavs(repo / "audio" / "clean"))
         note = "repo_audio_clean"
     if not noise:
+        # Prefer procedural / game-like noise for in-repo smokes. Residual
+        # (official noisy−clean) remixed onto the same speech is a poor
+        # stand-in for MS-SNSD everyday noise and often yields SI-SDRi < 0.
+        rng = np.random.default_rng(args.seed)
+        noise = [synth_game_ambience(SAMPLE_RATE * 4, SAMPLE_RATE, rng) for _ in range(4)]
         residual = extract_residual_noise(repo)
         if residual:
-            noise = residual
-            note = f"{note}+repo_residual"
+            noise.extend(0.35 * r for r in residual)
+            note = f"{note}+procedural_noise+light_residual"
         else:
-            rng = np.random.default_rng(args.seed)
-            noise = [synth_game_ambience(SAMPLE_RATE * 4, SAMPLE_RATE, rng)]
             note = f"{note}+procedural_noise"
     if not speech:
         raise SystemExit("no clean speech found; pass --speech_dir or keep audio/clean in the repo")

@@ -1,0 +1,94 @@
+{
+  "ckpt": "training/outputs/finetune_vbdemand/ulunas_finetuned.pt",
+  "device": "cpu",
+  "n_clips": 3,
+  "timing": {
+    "mean_ms": 86.73869733331685,
+    "p50_ms": 88.55311000002075,
+    "p95_ms": 90.20819200002279,
+    "p99_ms": 90.35531040002297,
+    "max_ms": 90.39209000002302,
+    "elapsed_s": 0.26021609199995055,
+    "audio_s": 6.0,
+    "rtf": 0.043369348666658425,
+    "frame_budget_ms": 16.0
+  },
+  "by_layer_system": {
+    "noisy": {
+      "vbdemandex": {
+        "clip_rate": 0.0,
+        "duration_s": 2.0,
+        "est_dbfs": -26.25360719748895,
+        "estoi": 0.7657771720064331,
+        "input_silence_rms": 0.017506701419330768,
+        "mix_dbfs": -26.25360719748895,
+        "pesq": 1.393911083539327,
+        "proxy_bak": 0.0,
+        "proxy_bak_improve": 0.0,
+        "proxy_ovrl": -26.25360719748895,
+        "proxy_sig_dbfs": -26.25360719748895,
+        "si_sdr": 9.72129565839728,
+        "si_sdri": 0.0,
+        "silence_atten_db": 0.0,
+        "silence_residual_rms": 0.017506701419330768,
+        "speech_residual_rms": 0.01736842273129888
+      },
+      "all": {
+        "clip_rate": 0.0,
+        "duration_s": 2.0,
+        "est_dbfs": -26.25360719748895,
+        "estoi": 0.7657771720064331,
+        "input_silence_rms": 0.017506701419330768,
+        "mix_dbfs": -26.25360719748895,
+        "pesq": 1.393911083539327,
+        "proxy_bak": 0.0,
+        "proxy_bak_improve": 0.0,
+        "proxy_ovrl": -26.25360719748895,
+        "proxy_sig_dbfs": -26.25360719748895,
+        "si_sdr": 9.72129565839728,
+        "si_sdri": 0.0,
+        "silence_atten_db": 0.0,
+        "silence_residual_rms": 0.017506701419330768,
+        "speech_residual_rms": 0.01736842273129888
+      }
+    },
+    "ulunas": {
+      "vbdemandex": {
+        "clip_rate": 0.0,
+        "duration_s": 2.0,
+        "est_dbfs": -27.320312731281888,
+        "estoi": 0.8650023917582793,
+        "input_silence_rms": 0.017506701419330768,
+        "mix_dbfs": -26.25360719748895,
+        "pesq": 2.705829461415609,
+        "proxy_bak": 51.59073470112555,
+        "proxy_bak_improve": 15.615519791688115,
+        "proxy_ovrl": -22.91141233322217,
+        "proxy_sig_dbfs": -26.8152922811442,
+        "si_sdr": 14.034166743963212,
+        "si_sdri": 4.312871085565932,
+        "silence_atten_db": 11.147653782691455,
+        "silence_residual_rms": 0.00674505207580984,
+        "speech_residual_rms": 0.009598674989872762
+      },
+      "all": {
+        "clip_rate": 0.0,
+        "duration_s": 2.0,
+        "est_dbfs": -27.320312731281888,
+        "estoi": 0.8650023917582793,
+        "input_silence_rms": 0.017506701419330768,
+        "mix_dbfs": -26.25360719748895,
+        "pesq": 2.705829461415609,
+        "proxy_bak": 51.59073470112555,
+        "proxy_bak_improve": 15.615519791688115,
+        "proxy_ovrl": -22.91141233322217,
+        "proxy_sig_dbfs": -26.8152922811442,
+        "si_sdr": 14.034166743963212,
+        "si_sdri": 4.312871085565932,
+        "silence_atten_db": 11.147653782691455,
+        "silence_residual_rms": 0.00674505207580984,
+        "speech_residual_rms": 0.009598674989872762
+      }
+    }
+  }
+}

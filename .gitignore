@@ -20,3 +20,6 @@ training/outputs/**/ab_listen/
 training/outputs/**/*.wav
 training/outputs/**/*.onnx
 training/outputs/**/*.npy
+
+# Domain-expand CPU smoke weights (not a ship ckpt)
+training/outputs/finetune_mssnsd_demandex/*.pt

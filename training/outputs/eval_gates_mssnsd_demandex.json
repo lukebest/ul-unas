@@ -1,0 +1,67 @@
+{
+  "init_ckpt": "training/outputs/finetune_vbdemand/ulunas_finetuned.pt",
+  "gates": {
+    "G0": {
+      "id": "G0",
+      "ok": true,
+      "counts": {
+        "train_mssnsd.jsonl": 14,
+        "dev_mssnsd.jsonl": 2,
+        "eval_mssnsd.jsonl": 2,
+        "train_vbdemandex.jsonl": 3,
+        "dev_vbdemandex.jsonl": 3,
+        "eval_vbdemandex.jsonl": 3
+      },
+      "unresolved_clean": [],
+      "n_unresolved": 0,
+      "problems": []
+    },
+    "G1": {
+      "id": "G1",
+      "ok": null,
+      "skipped": true,
+      "reason": "eval_vbdemand wavs/metrics missing; cannot re-score n=824 on this box"
+    },
+    "G2": {
+      "id": "G2",
+      "ok": true,
+      "stats": {
+        "file": "training/outputs/eval_mssnsd_smoke/metrics_summary.json",
+        "ckpt": "training/outputs/finetune_mssnsd_demandex/ulunas_finetuned.pt",
+        "system": "ulunas",
+        "n": 2,
+        "si_sdr": 16.00657203073829,
+        "si_sdri": 3.629416175175373,
+        "pesq": 2.5085136890411377,
+        "estoi": 0.8041065681855168
+      },
+      "si_sdri": 3.629416175175373
+    },
+    "G3": {
+      "id": "G3",
+      "ok": true,
+      "rule_a_blocks_below_init": true,
+      "rule_a_allows_equal_init": true,
+      "empty_probe_blocked": true,
+      "rule_b_present": true
+    },
+    "G4": {
+      "id": "G4",
+      "ok": true,
+      "rtf": 0.036654098000013846,
+      "frame_budget_ms": 16.0,
+      "note": "CPU RTF smoke is acceptable; do not claim GPU acceptance from CPU numbers"
+    },
+    "G5": {
+      "id": "G5",
+      "ok": true,
+      "problems": []
+    }
+  },
+  "failed": [],
+  "skipped": [
+    "G1"
+  ],
+  "ok": true,
+  "cuda_claimed": false
+}
