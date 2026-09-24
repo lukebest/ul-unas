@@ -8,6 +8,8 @@ venv/
 training/data/raw/
 training/data/processed/
 training/data/manifests/paired_all.jsonl
+training/data/manifests/paired_mssnsd.jsonl
+training/data/manifests/paired_vbdemandex.jsonl
 
 # Per-clip eval dumps (keep metrics.md / eval_compare.json)
 training/outputs/**/metrics.json

@@ -39,6 +39,23 @@ Two writers can emit `{train,dev,eval}_vbdemand.jsonl`; keep both:
 
 If `training/data/raw/` is empty, `synthesize_pairs.py --mode synth` still builds a tiny bootstrap set from `audio/clean` (pipeline bring-up only).
 
+## MS-SNSD + VB-DemandEx (domain expand)
+
+Layout adapters and an hour-capped 16 kHz mixer. Frozen rules A/B/C and `--mode=auto` stay as they are. See `training/experiments/mssnsd_demandex.md`.
+
+```bash
+python training/download_mssnsd.py          # prints steps; --fetch_scripts / --synth optional
+python training/synthesize_mssnsd.py --hours 0.5 --max_hours 2
+python training/download_demandex.py        # --download is opt-in (~1.94 GB); --layout maps valid→dev
+python training/prepare_manifest.py         # extra JSONLs; scan_vbdemand + ingest_public_pairs unchanged
+python training/train_ulunas.py --config training/configs/mssnsd_demandex.json
+python training/eval_gates.py --new_metrics training/outputs/eval_mssnsd/metrics_summary.json
+```
+
+Continue-train init priority: `training/outputs/finetune_vbdemand/ulunas_finetuned.pt`, else official DNS3 tar. Output dir is `training/outputs/finetune_mssnsd_demandex/` so the VB ship ckpt is not overwritten.
+
+CPU smoke (no full-corpus download): `python training/run_domain_expand_smoke.py`
+
 ## VoiceBank+DEMAND fine-tune (not the 16-step smoke)
 
 Init **only** from `checkpoints/model_trained_on_dns3.tar`. Do not resume `training/outputs/finetune/ulunas_finetuned.pt`.

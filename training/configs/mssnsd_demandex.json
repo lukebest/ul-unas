@@ -1,0 +1,29 @@
+{
+  "sample_rate": 16000,
+  "hop": 256,
+  "n_fft": 512,
+  "dataset": "MS-SNSD + VB-DemandEx continue-train",
+  "init_ckpt": "training/outputs/finetune_vbdemand/ulunas_finetuned.pt",
+  "init_ckpt_fallback": "checkpoints/model_trained_on_dns3.tar",
+  "train_manifests": [
+    "training/data/manifests/train_mssnsd.jsonl",
+    "training/data/manifests/train_vbdemandex.jsonl"
+  ],
+  "dev_manifests": [
+    "training/data/manifests/dev_vbdemand.jsonl",
+    "training/data/manifests/dev_mssnsd.jsonl"
+  ],
+  "output_dir": "training/outputs/finetune_mssnsd_demandex",
+  "freeze": "decoder_tail",
+  "lr": 1e-5,
+  "batch_size": 8,
+  "seconds": 2.0,
+  "epochs": 1,
+  "max_steps": 80,
+  "max_dev": 24,
+  "w_mag": 10,
+  "w_ri": 5,
+  "w_sisnr": 1,
+  "w_prot": 2,
+  "notes": "Continue from finetune_vbdemand/ulunas_finetuned.pt when present, else official DNS3 tar. Rules A/B unchanged. Do not overwrite finetune_vbdemand/ulunas_finetuned.pt."
+}
