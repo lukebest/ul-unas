@@ -13,6 +13,7 @@ from __future__ import annotations
 import argparse
 import ast
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -174,6 +175,36 @@ def gate_g4(metrics_path: Path | None) -> dict:
     }
 
 
+# Import or path usage — not prose like "do not touch NoiseZero".
+_NOISEZERO_USAGE = re.compile(
+    r"(?:(?:import|from)\s+NoiseZero\b|[/\\]NoiseZero\b|['\"][^'\"]*NoiseZero[/\\][^'\"]*['\"])",
+    re.IGNORECASE,
+)
+
+
+def _noisezero_scope_hits(repo: Path) -> list[str]:
+    """G5: fail if this repo imports or paths into NoiseZero."""
+    hits: list[str] = []
+    if (repo / "NoiseZero").exists():
+        hits.append("NoiseZero directory exists in this repo")
+    skip_parts = {".git", ".venv", "venv", "__pycache__", "node_modules"}
+    for p in repo.rglob("*.py"):
+        if any(part in skip_parts for part in p.parts):
+            continue
+        try:
+            text = p.read_text(encoding="utf-8", errors="replace")
+        except OSError:
+            continue
+        if p.name == "eval_gates.py":
+            continue
+        rel = p.relative_to(repo).as_posix()
+        for i, line in enumerate(text.splitlines(), 1):
+            code = line.split("#", 1)[0]
+            if _NOISEZERO_USAGE.search(code):
+                hits.append(f"{rel}:{i}")
+    return hits
+
+
 def _mode_auto_default() -> bool:
     src = (ROOT / "training" / "synthesize_pairs.py").read_text(encoding="utf-8")
     tree = ast.parse(src)
@@ -200,9 +231,7 @@ def gate_g5() -> dict:
     for rel in FORBIDDEN_NEW_FILES:
         if (ROOT / rel).exists():
             problems.append(f"forbidden file landed: {rel}")
-    # No NoiseZero path references as a sibling checkout.
-    if (ROOT.parent / "NoiseZero").exists() and False:
-        problems.append("NoiseZero tree was touched")
+    problems.extend(_noisezero_scope_hits(ROOT))
     # Scan this repo for accidental DNS/URGENT download entrypoints.
     for p in (ROOT / "training").glob("download_*.py"):
         if p.name in {"download_vbdemand.py", "download_mssnsd.py", "download_demandex.py"}:

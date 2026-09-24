@@ -12,6 +12,7 @@ Extends the dual-writer catalog without replacing VoiceBank+DEMAND:
 from __future__ import annotations
 
 import json
+import os
 import re
 from pathlib import Path
 
@@ -208,17 +209,22 @@ def match_pairs(clean_dir: Path, noisy_dir: Path) -> list[tuple[str, Path, Path]
 
 
 def _find_dir_named(root: Path, name: str) -> list[Path]:
-    if not root.exists():
+    """Find directories named `name` (case-insensitive). Dir-only walk, no file rglob."""
+    if not root.is_dir():
         return []
     found: list[Path] = []
-    direct = root / name
-    if direct.is_dir():
-        found.append(direct)
-    # Case-insensitive exact name search, bounded to this tree.
     target = name.lower()
-    for p in root.rglob("*"):
-        if p.is_dir() and p.name.lower() == target and p not in found:
-            found.append(p)
+    # Known shallow joins first (dataset root and 16k layout).
+    for cand in (root / name, root / "16k" / name):
+        if cand.is_dir() and cand not in found:
+            found.append(cand)
+    for dirpath, dirnames, _files in os.walk(root, followlinks=False):
+        for d in dirnames:
+            if d.lower() != target:
+                continue
+            p = Path(dirpath) / d
+            if p not in found:
+                found.append(p)
     return found
 
 
@@ -340,6 +346,7 @@ def extra_dataset_roots(public_root: Path, repo: Path) -> dict[str, list[Path]]:
         public_root,
         repo / "training" / "data" / "raw",
         repo / "training" / "data" / "processed",
+        repo / "training" / "data" / "smoke",
     ]
     found: dict[str, list[Path]] = {spec["id"]: [] for spec in DATASET_SPECS}
     for spec in DATASET_SPECS:

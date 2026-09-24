@@ -7,6 +7,7 @@ venv/
 # Large public datasets (download via training/download_vbdemand.py)
 training/data/raw/
 training/data/processed/
+training/data/smoke/
 training/data/manifests/paired_all.jsonl
 training/data/manifests/paired_mssnsd.jsonl
 training/data/manifests/paired_vbdemandex.jsonl

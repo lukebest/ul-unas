@@ -20,15 +20,21 @@ SMOKE_FINETUNE = ROOT / "training" / "outputs" / "finetune" / "ulunas_finetuned.
 
 def resolve_continue_init(repo: Path | None = None) -> Path:
     repo = (repo or ROOT).resolve()
+    smoke = (repo / SMOKE_FINETUNE.relative_to(ROOT)).resolve()
     candidates = [
         repo / "training" / "outputs" / "finetune_vbdemand" / "ulunas_finetuned.pt",
         repo / "checkpoints" / "model_trained_on_dns3.tar",
+        repo / SMOKE_FINETUNE.relative_to(ROOT),
     ]
     for path in candidates:
-        if path.is_file() and path.stat().st_size > 0:
-            if path.resolve() == (repo / SMOKE_FINETUNE.relative_to(ROOT)).resolve():
-                continue
-            return path
+        if not (path.is_file() and path.stat().st_size > 0):
+            continue
+        if path.resolve() == smoke:
+            raise FileNotFoundError(
+                "refuse smoke init training/outputs/finetune/ulunas_finetuned.pt "
+                "(16-step SI-SDR −50); need finetune_vbdemand or official DNS3"
+            )
+        return path
     raise FileNotFoundError(
         "no continue-train init: expected "
         "training/outputs/finetune_vbdemand/ulunas_finetuned.pt or "

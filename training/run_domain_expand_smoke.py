@@ -75,11 +75,13 @@ def main() -> None:
     init = describe_init(ROOT)
     print(json.dumps({"continue_init": init}, indent=2))
 
-    mssnsd_raw = ROOT / "training" / "data" / "raw" / "mssnsd"
-    demandex_raw = ROOT / "training" / "data" / "raw" / "vbdemandex"
-    write_mssnsd_license(mssnsd_raw)
-    write_demandex_license(demandex_raw)
-    write_demandex_fixture(demandex_raw)
+    # Never write fixtures into canonical raw/processed corpora.
+    smoke_root = ROOT / "training" / "data" / "smoke"
+    mssnsd_smoke = smoke_root / "mssnsd"
+    demandex_smoke = smoke_root / "vbdemandex"
+    write_mssnsd_license(mssnsd_smoke)
+    write_demandex_license(demandex_smoke)
+    write_demandex_fixture(demandex_smoke)
 
     synth_ns = synthesize_mssnsd.build_parser().parse_args(
         [
@@ -96,14 +98,21 @@ def main() -> None:
             "10",
             "15",
             "--output_dir",
-            "training/data/processed/mssnsd/16k",
+            "training/data/smoke/mssnsd/16k",
         ]
     )
     synth_report = synthesize_mssnsd.synthesize(synth_ns)
 
     man = prepare_manifest.build(
         prepare_manifest.build_parser().parse_args(
-            ["--repo", str(ROOT), "--public_root", "training/data/raw", "--output_dir", "training/data/manifests"]
+            [
+                "--repo",
+                str(ROOT),
+                "--public_root",
+                "training/data/smoke",
+                "--output_dir",
+                "training/data/manifests",
+            ]
         )
     )
 
@@ -219,12 +228,9 @@ def main() -> None:
         if Path("training/outputs/eval_mssnsd_smoke/metrics_summary.json").is_file()
         else {}
     )
-    # G2 is SI-SDRi>0 on the new-domain test. A 4-step CPU continue may not
-    # beat noisy; the init (VB ship / DNS3) is the acceptance reference when
-    # CUDA is absent. Candidate numbers are still recorded.
-    g2_metrics = "training/outputs/eval_mssnsd_init/metrics_summary.json"
-    if cand_stats.get("si_sdri") is not None and float(cand_stats["si_sdri"]) > 0:
-        g2_metrics = "training/outputs/eval_mssnsd_smoke/metrics_summary.json"
+    # G2 always scores the *candidate* weights. Do not substitute init
+    # metrics when cand SI-SDRi ≤ 0 (that would falsely pass).
+    g2_metrics = "training/outputs/eval_mssnsd_smoke/metrics_summary.json"
 
     gates = eval_gates.run(
         eval_gates.build_parser().parse_args(

@@ -47,10 +47,12 @@ Layout adapters and an hour-capped 16 kHz mixer. Frozen rules A/B/C and `--mode=
 python training/download_mssnsd.py          # prints steps; --fetch_scripts / --synth optional
 python training/synthesize_mssnsd.py --hours 0.5 --max_hours 2
 python training/download_demandex.py        # --download is opt-in (~1.94 GB); --layout maps valid→dev
-python training/prepare_manifest.py         # extra JSONLs; scan_vbdemand + ingest_public_pairs unchanged
+python training/prepare_manifest.py         # VB-DMD writers stay Valentini-keyed; extra-domain JSONLs are additive
 python training/train_ulunas.py --config training/configs/mssnsd_demandex.json
 python training/eval_gates.py --new_metrics training/outputs/eval_mssnsd/metrics_summary.json
 ```
+
+`scan_vbdemand` / `ingest_public_pairs` / `find_vbdemand_roots` stay Valentini-keyed. MS-SNSD and VB-DemandEx JSONLs are additive side effects of `prepare_manifest` / extra ingest, not a rewrite of those writers.
 
 Continue-train init priority: `training/outputs/finetune_vbdemand/ulunas_finetuned.pt`, else official DNS3 tar. Output dir is `training/outputs/finetune_mssnsd_demandex/` so the VB ship ckpt is not overwritten.
 
