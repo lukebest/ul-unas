@@ -1,8 +1,8 @@
 # UL-UNAS evaluation
 
 - checkpoint: `training/outputs/finetune_mssnsd_demandex/ulunas_finetuned.pt`
-- RTF: 0.0367
-- mean / p99 clip time: 73.3 / 86.0 ms
+- RTF: 0.0353
+- mean / p99 clip time: 70.5 / 84.9 ms
 
 ## Layer averages
 

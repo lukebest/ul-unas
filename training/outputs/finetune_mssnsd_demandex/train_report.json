@@ -18,23 +18,23 @@
   "device": "cpu",
   "cuda_available": false,
   "best_si_sdr": 14.963543097291922,
-  "wrote_best": true,
-  "seconds": 0.8986353874206543,
+  "wrote_best": false,
+  "seconds": 0.8934326171875,
   "ckpt": "training/outputs/finetune_mssnsd_demandex/ulunas_finetuned.pt",
   "last_ckpt": "training/outputs/finetune_mssnsd_demandex/ulunas_last.pt",
   "train_manifests": [
-    "training/data/manifests/train_mssnsd.jsonl",
-    "training/data/manifests/train_vbdemandex.jsonl"
+    "/workspace/training/data/smoke/manifests/train_mssnsd.jsonl",
+    "/workspace/training/data/smoke/manifests/train_vbdemandex.jsonl"
   ],
   "dev_manifests": [
-    "training/data/manifests/dev_mssnsd.jsonl"
+    "/workspace/training/data/smoke/manifests/dev_mssnsd.jsonl"
   ],
   "history": [
     {
       "epoch": 0,
       "step": 4,
-      "train_loss": 28.64065170288086,
-      "full_si_sdr": 14.963543097291922,
+      "train_loss": 29.658123016357422,
+      "full_si_sdr": 14.958700070968433,
       "full_n": 2
     }
   ]

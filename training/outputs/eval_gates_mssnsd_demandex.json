@@ -48,7 +48,7 @@
     "G4": {
       "id": "G4",
       "ok": true,
-      "rtf": 0.036654098000013846,
+      "rtf": 0.03525902575000828,
       "frame_budget_ms": 16.0,
       "note": "CPU RTF smoke is acceptable; do not claim GPU acceptance from CPU numbers"
     },

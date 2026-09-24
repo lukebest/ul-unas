@@ -16,6 +16,7 @@ if str(ROOT) not in sys.path:
 from training import SAMPLE_RATE
 from training.audio_io import write_wav
 from training.paired_layout import (
+    extra_dataset_roots,
     find_demandex_roots,
     find_generic_paired_roots,
     find_mssnsd_roots,
@@ -103,6 +104,22 @@ class LayoutTests(unittest.TestCase):
             self.assertIn("vbdemandex", extras)
             self.assertGreater(len(extras["mssnsd"]["train"]), 0)
             self.assertGreater(len(extras["vbdemandex"]["train"]), 0)
+
+    def test_smoke_roots_not_appended_by_default(self):
+        with tempfile.TemporaryDirectory() as td:
+            repo = Path(td)
+            raw = repo / "training" / "data" / "raw"
+            smoke_train = repo / "training" / "data" / "smoke" / "mssnsd" / "16k" / "train"
+            (smoke_train / "clean").mkdir(parents=True)
+            (smoke_train / "noisy").mkdir(parents=True)
+            raw.mkdir(parents=True)
+            _wav(smoke_train / "clean" / "s.wav")
+            _wav(smoke_train / "noisy" / "s.wav")
+            self.assertEqual(extra_dataset_roots(raw, repo)["mssnsd"], [])
+            flagged = extra_dataset_roots(raw, repo, include_smoke=True)["mssnsd"]
+            self.assertTrue(any("smoke" in p.parts for p in flagged))
+            via_public = extra_dataset_roots(repo / "training" / "data" / "smoke", repo)["mssnsd"]
+            self.assertTrue(via_public)
 
     def test_generic_split_tree(self):
         """Keep: public API for find_generic_paired_roots (not DATASET_SPECS)."""

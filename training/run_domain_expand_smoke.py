@@ -18,6 +18,27 @@ from training.audio_io import write_wav
 from training.continue_init import describe_init, resolve_continue_init
 
 
+def _candidate_ckpt(train_report: dict | None, init_ckpt: str) -> str | None:
+    """Real continue-train weights only. Never fall back to init for G2."""
+    if not train_report:
+        return None
+    try:
+        init_res = Path(init_ckpt).resolve()
+    except OSError:
+        init_res = None
+    for key in ("ckpt", "last_ckpt"):
+        raw = train_report.get(key)
+        if not raw:
+            continue
+        path = Path(raw)
+        if not path.is_file():
+            continue
+        if init_res is not None and path.resolve() == init_res:
+            continue
+        return str(path)
+    return None
+
+
 def _tone(freq: float, seconds: float, sr: int = SAMPLE_RATE) -> np.ndarray:
     t = np.arange(int(seconds * sr), dtype=np.float32) / sr
     return (0.2 * np.sin(2 * np.pi * freq * t)).astype(np.float32)
@@ -103,6 +124,7 @@ def main() -> None:
     )
     synth_report = synthesize_mssnsd.synthesize(synth_ns)
 
+    smoke_man = smoke_root / "manifests"
     man = prepare_manifest.build(
         prepare_manifest.build_parser().parse_args(
             [
@@ -111,7 +133,7 @@ def main() -> None:
                 "--public_root",
                 "training/data/smoke",
                 "--output_dir",
-                "training/data/manifests",
+                "training/data/smoke/manifests",
             ]
         )
     )
@@ -124,7 +146,7 @@ def main() -> None:
     if not args.skip_train:
         ckpt = str(resolve_continue_init(ROOT))
         # Prefer new-domain dev for the in-loop probe when VB wavs are absent.
-        dev_man = "training/data/manifests/dev_mssnsd.jsonl"
+        dev_man = str(smoke_man / "dev_mssnsd.jsonl")
         train_report = train_ulunas.train(
             train_ulunas.parse_args(
                 [
@@ -133,8 +155,8 @@ def main() -> None:
                     "--ckpt",
                     ckpt,
                     "--train_manifests",
-                    "training/data/manifests/train_mssnsd.jsonl",
-                    "training/data/manifests/train_vbdemandex.jsonl",
+                    str(smoke_man / "train_mssnsd.jsonl"),
+                    str(smoke_man / "train_vbdemandex.jsonl"),
                     "--dev_manifests",
                     dev_man,
                     "--output_dir",
@@ -159,13 +181,14 @@ def main() -> None:
 
     eval_report = None
     init_eval = None
+    init_ckpt = str(resolve_continue_init(ROOT))
+    cand_ckpt = _candidate_ckpt(train_report, init_ckpt)
     if not args.skip_eval:
-        init_ckpt = str(resolve_continue_init(ROOT))
         init_eval = evaluate.run_eval(
             evaluate.build_parser().parse_args(
                 [
                     "--manifest",
-                    "training/data/manifests/eval_mssnsd.jsonl",
+                    str(smoke_man / "eval_mssnsd.jsonl"),
                     "--ckpt",
                     init_ckpt,
                     "--output_dir",
@@ -177,27 +200,23 @@ def main() -> None:
                 ]
             )
         )
-        cand_ckpt = (
-            (train_report or {}).get("ckpt")
-            or (train_report or {}).get("last_ckpt")
-            or init_ckpt
-        )
-        eval_report = evaluate.run_eval(
-            evaluate.build_parser().parse_args(
-                [
-                    "--manifest",
-                    "training/data/manifests/eval_mssnsd.jsonl",
-                    "--ckpt",
-                    cand_ckpt,
-                    "--output_dir",
-                    "training/outputs/eval_mssnsd_smoke",
-                    "--device",
-                    device,
-                    "--no-save_audio",
-                    "--no-require-pesq",
-                ]
+        if cand_ckpt:
+            eval_report = evaluate.run_eval(
+                evaluate.build_parser().parse_args(
+                    [
+                        "--manifest",
+                        str(smoke_man / "eval_mssnsd.jsonl"),
+                        "--ckpt",
+                        cand_ckpt,
+                        "--output_dir",
+                        "training/outputs/eval_mssnsd_smoke",
+                        "--device",
+                        device,
+                        "--no-save_audio",
+                        "--no-require-pesq",
+                    ]
+                )
             )
-        )
         evaluate.run_eval(
             evaluate.build_parser().parse_args(
                 [
@@ -228,20 +247,33 @@ def main() -> None:
         if Path("training/outputs/eval_mssnsd_smoke/metrics_summary.json").is_file()
         else {}
     )
-    # G2 always scores the *candidate* weights. Do not substitute init
-    # metrics when cand SI-SDRi ≤ 0 (that would falsely pass).
-    g2_metrics = "training/outputs/eval_mssnsd_smoke/metrics_summary.json"
-
-    gates = eval_gates.run(
-        eval_gates.build_parser().parse_args(
-            [
-                "--new_metrics",
-                g2_metrics,
-                "--output",
-                "training/outputs/eval_gates_mssnsd_demandex.json",
-            ]
+    # G2 only if a real candidate was scored. No init fallback (fail closed).
+    smoke_jsonls = [
+        str(smoke_man / name)
+        for name in (
+            "train_mssnsd.jsonl",
+            "dev_mssnsd.jsonl",
+            "eval_mssnsd.jsonl",
+            "train_vbdemandex.jsonl",
+            "dev_vbdemandex.jsonl",
+            "eval_vbdemandex.jsonl",
         )
-    )
+    ]
+    gate_argv = [
+        "--new_manifests",
+        *smoke_jsonls,
+        "--output",
+        "training/outputs/eval_gates_mssnsd_demandex.json",
+    ]
+    g2_metrics = ""
+    cand_metrics = Path("training/outputs/eval_mssnsd_smoke/metrics_summary.json")
+    if cand_ckpt and cand_metrics.is_file():
+        g2_metrics = str(cand_metrics)
+        gate_argv.extend(["--new_metrics", g2_metrics])
+    else:
+        print("G2 fail-closed: no candidate ckpt distinct from init; not passing init metrics")
+
+    gates = eval_gates.run(eval_gates.build_parser().parse_args(gate_argv))
     summary = {
         "continue_init": init,
         "cuda_available": cuda,
@@ -261,6 +293,8 @@ def main() -> None:
             "g2_metrics": g2_metrics,
         },
         "gates": {"ok": gates["ok"], "failed": gates["failed"], "skipped": gates["skipped"]},
+        "candidate_ckpt": cand_ckpt,
+        "smoke_manifests": "training/data/smoke/manifests",
         "gpu_acceptance_claimed": False,
     }
     out = ROOT / "training" / "outputs" / "domain_expand_smoke.json"

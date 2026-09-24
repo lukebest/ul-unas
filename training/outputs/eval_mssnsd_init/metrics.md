@@ -1,8 +1,8 @@
 # UL-UNAS evaluation
 
 - checkpoint: `/workspace/training/outputs/finetune_vbdemand/ulunas_finetuned.pt`
-- RTF: 0.0411
-- mean / p99 clip time: 82.2 / 86.2 ms
+- RTF: 0.0465
+- mean / p99 clip time: 93.1 / 109.0 ms
 
 ## Layer averages
 

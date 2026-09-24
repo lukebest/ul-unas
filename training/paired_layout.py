@@ -353,14 +353,26 @@ def _finder_for(kind: str):
     return find_generic_paired_roots
 
 
-def extra_dataset_roots(public_root: Path, repo: Path) -> dict[str, list[Path]]:
-    """Named dataset dirs under raw/ and processed/, plus public_root itself."""
+def extra_dataset_roots(
+    public_root: Path,
+    repo: Path,
+    include_smoke: bool = False,
+) -> dict[str, list[Path]]:
+    """Named dataset dirs under raw/ and processed/, plus public_root itself.
+
+    `training/data/smoke/` is **not** always appended. Include it only when
+    `public_root` *is* the smoke tree, or when `include_smoke=True`. Default
+    ingest (`public_root=training/data/raw`) must not auto-ingest leftover
+    smoke into canonical `{train,dev,eval}_{mssnsd,vbdemandex}.jsonl`.
+    """
+    smoke = repo / "training" / "data" / "smoke"
     bases = [
         public_root,
         repo / "training" / "data" / "raw",
         repo / "training" / "data" / "processed",
-        repo / "training" / "data" / "smoke",
     ]
+    if include_smoke:
+        bases.append(smoke)
     found: dict[str, list[Path]] = {spec["id"]: [] for spec in DATASET_SPECS}
     for spec in DATASET_SPECS:
         ds = spec["id"]

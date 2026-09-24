@@ -24,7 +24,7 @@
       15.0
     ],
     "source_note": "repo_audio_clean+procedural_noise+light_residual",
-    "output_dir": "training/data/processed/mssnsd/16k",
+    "output_dir": "training/data/smoke/mssnsd/16k",
     "max_hours": 2.0,
     "allow_large": false,
     "layout": "{split}/{clean,noisy} same-stem wav (ingestible)"
@@ -35,28 +35,28 @@
     "eval_real": 3,
     "eval_official": 2,
     "eval_clean": 2,
-    "train_vbdemand": 10802,
-    "dev_vbdemand": 770,
-    "eval_vbdemand": 824,
+    "train_vbdemand": 0,
+    "dev_vbdemand": 0,
+    "eval_vbdemand": 0,
     "train_mssnsd": 14,
     "dev_mssnsd": 2,
     "eval_mssnsd": 2,
     "train_vbdemandex": 3,
     "dev_vbdemandex": 3,
     "eval_vbdemandex": 3,
-    "public_root": "training/data/raw"
+    "public_root": "training/data/smoke"
   },
   "train": {
     "init_ckpt": "/workspace/training/outputs/finetune_vbdemand/ulunas_finetuned.pt",
     "steps_run": 4,
     "device": "cpu",
-    "wrote_best": true,
+    "wrote_best": false,
     "best_si_sdr": 14.963543097291922,
     "ckpt": "training/outputs/finetune_mssnsd_demandex/ulunas_finetuned.pt",
     "last_ckpt": "training/outputs/finetune_mssnsd_demandex/ulunas_last.pt"
   },
   "eval_new_domain": {
-    "rtf": 0.036654098000013846,
+    "rtf": 0.03525902575000828,
     "systems": [
       "noisy",
       "ulunas"
@@ -72,5 +72,7 @@
       "G1"
     ]
   },
+  "candidate_ckpt": "training/outputs/finetune_mssnsd_demandex/ulunas_finetuned.pt",
+  "smoke_manifests": "training/data/smoke/manifests",
   "gpu_acceptance_claimed": false
 }
