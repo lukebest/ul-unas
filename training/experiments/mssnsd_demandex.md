@@ -70,6 +70,19 @@ python training/synthesize_pairs.py --mode ingest   # still auto-keys only on VB
 synth. Extra datasets write **separate** JSONLs
 `{train,dev,eval}_{mssnsd,vbdemandex}.jsonl` and never replace the VB-DMD files.
 
+### Three extra finders (`training/paired_layout.py`)
+
+| Function | Used by `DATASET_SPECS`? | Role |
+|---|---|---|
+| `find_mssnsd_roots` | yes (`mssnsd`) | Official synth names + 16 kHz split tree |
+| `find_demandex_roots` | yes (`vbdemandex`) | HF zip names `clean_{train,valid,test}` |
+| `find_generic_paired_roots` | **no** | Explicit public API for any other `{split}/{clean,noisy}` layout |
+
+Captain decision: **keep** `find_generic_paired_roots` and `test_generic_split_tree`.
+It is not dead code; it is the third corpus entry for layouts that are neither
+MS-SNSD nor DemandEx (and not Valentini). Call it directly; do not hang it off
+the mssnsd/demandex specs.
+
 ## Continue-train
 
 ```bash

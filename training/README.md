@@ -54,6 +54,8 @@ python training/eval_gates.py --new_metrics training/outputs/eval_mssnsd/metrics
 
 `scan_vbdemand` / `ingest_public_pairs` / `find_vbdemand_roots` stay Valentini-keyed. MS-SNSD and VB-DemandEx JSONLs are additive side effects of `prepare_manifest` / extra ingest, not a rewrite of those writers.
 
+`training.paired_layout` has three extra finders. `DATASET_SPECS` auto-ingests only `find_mssnsd_roots` and `find_demandex_roots`. `find_generic_paired_roots` is an **explicit third public API** for other `{split}/{clean,noisy}` trees (not used by those two specs). Keep it; see `training/tests/test_paired_adapters.py::test_generic_split_tree`.
+
 Continue-train init priority: `training/outputs/finetune_vbdemand/ulunas_finetuned.pt`, else official DNS3 tar. Output dir is `training/outputs/finetune_mssnsd_demandex/` so the VB ship ckpt is not overwritten.
 
 CPU smoke (no full-corpus download): `python training/run_domain_expand_smoke.py`

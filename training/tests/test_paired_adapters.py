@@ -105,6 +105,7 @@ class LayoutTests(unittest.TestCase):
             self.assertGreater(len(extras["vbdemandex"]["train"]), 0)
 
     def test_generic_split_tree(self):
+        """Keep: public API for find_generic_paired_roots (not DATASET_SPECS)."""
         with tempfile.TemporaryDirectory() as td:
             root = Path(td) / "generic"
             for split in ("train", "dev", "test"):

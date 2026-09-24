@@ -4,7 +4,12 @@ Extends the dual-writer catalog without replacing VoiceBank+DEMAND:
 
 - `prepare_manifest.scan_vbdemand` / `find_vbdemand_roots` stay Valentini-only.
 - `synthesize_pairs.ingest_public_pairs` stays the VB-DMD wav-same-name writer.
-- This module indexes MS-SNSD, VB-DemandEx, and any `{split}/{clean,noisy}` tree.
+- Three extra finders (keep all three):
+  1. `find_mssnsd_roots` — `DATASET_SPECS` id `mssnsd`
+  2. `find_demandex_roots` — `DATASET_SPECS` id `vbdemandex`
+  3. `find_generic_paired_roots` — explicit public API for other
+     `{split}/{clean,noisy}` trees. **Not** wired into `DATASET_SPECS`;
+     callers use it directly (see `test_generic_split_tree`).
 
 `--mode=auto` is unchanged: it still keys only on `find_vbdemand_roots`.
 """
@@ -63,6 +68,8 @@ DEMANDEX_PATH_MARKERS = ("demandex", "vbdemandex", "vb-demandex", "vb_demandex")
 CLNSP_IN_NOISY = re.compile(r"(clnsp\d+)", re.IGNORECASE)
 NOISY_INDEX = re.compile(r"^noisy(\d+)(?:_|$)", re.IGNORECASE)
 
+# Auto-ingest ids only. `find_generic_paired_roots` is intentionally omitted
+# (third public API; not an mssnsd/demandex finder).
 DATASET_SPECS = (
     {
         "id": "mssnsd",
@@ -328,7 +335,13 @@ def find_demandex_roots(root: Path) -> list[tuple[Path, Path, str]]:
 
 
 def find_generic_paired_roots(root: Path) -> list[tuple[Path, Path, str]]:
-    """Thin adapter: any `{split}/{clean,noisy}` tree that is not Valentini."""
+    """Third corpus entry: any `{split}/{clean,noisy}` tree that is not Valentini.
+
+    Public API for other paired layouts (Libri+DEMAND self-mix, flattened
+    challenge exports, …). `DATASET_SPECS` does **not** call this — mssnsd
+    and demandex use `find_mssnsd_roots` / `find_demandex_roots` only.
+    Keep this function and `test_generic_split_tree`.
+    """
     return _unique_roots(find_split_tree_pairs(root))
 
 
