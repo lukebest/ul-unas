@@ -1,0 +1,78 @@
+{
+  "continue_init": {
+    "path": "training/outputs/finetune_vbdemand/ulunas_finetuned.pt",
+    "kind": "finetune_vbdemand",
+    "bytes": 782135
+  },
+  "cuda_available": false,
+  "device": "cpu",
+  "synth": {
+    "dataset": "MS-SNSD-style",
+    "sr": 16000,
+    "hours_requested": 0.01,
+    "hours_written": 0.01,
+    "seconds_per_clip": 2.0,
+    "n": 18,
+    "by_split": {
+      "train": 14,
+      "dev": 2,
+      "test": 2
+    },
+    "snr_db": [
+      5.0,
+      10.0,
+      15.0
+    ],
+    "source_note": "repo_audio_clean+procedural_noise+light_residual",
+    "output_dir": "training/data/smoke/mssnsd/16k",
+    "max_hours": 2.0,
+    "allow_large": false,
+    "layout": "{split}/{clean,noisy} same-stem wav (ingestible)"
+  },
+  "manifest": {
+    "speech": 2,
+    "noise": 0,
+    "eval_real": 3,
+    "eval_official": 2,
+    "eval_clean": 2,
+    "train_vbdemand": 0,
+    "dev_vbdemand": 0,
+    "eval_vbdemand": 0,
+    "train_mssnsd": 14,
+    "dev_mssnsd": 2,
+    "eval_mssnsd": 2,
+    "train_vbdemandex": 3,
+    "dev_vbdemandex": 3,
+    "eval_vbdemandex": 3,
+    "public_root": "training/data/smoke"
+  },
+  "train": {
+    "init_ckpt": "/workspace/training/outputs/finetune_vbdemand/ulunas_finetuned.pt",
+    "steps_run": 4,
+    "device": "cpu",
+    "wrote_best": false,
+    "best_si_sdr": 14.963543097291922,
+    "ckpt": "training/outputs/finetune_mssnsd_demandex/ulunas_finetuned.pt",
+    "last_ckpt": "training/outputs/finetune_mssnsd_demandex/ulunas_last.pt"
+  },
+  "eval_new_domain": {
+    "rtf": 0.03297980450003024,
+    "systems": [
+      "noisy",
+      "ulunas"
+    ],
+    "init_si_sdri": 3.634238349066547,
+    "cand_si_sdri": 3.6327052032019544,
+    "g2_metrics": "training/outputs/eval_mssnsd_smoke/metrics_summary.json"
+  },
+  "gates": {
+    "ok": true,
+    "failed": [],
+    "skipped": [
+      "G1"
+    ]
+  },
+  "candidate_ckpt": "training/outputs/finetune_mssnsd_demandex/ulunas_last.pt",
+  "smoke_manifests": "training/data/smoke/manifests",
+  "gpu_acceptance_claimed": false
+}

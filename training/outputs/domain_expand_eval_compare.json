@@ -1,0 +1,66 @@
+{
+  "systems": [
+    {
+      "file": "training/outputs/eval_mssnsd_init/metrics_summary.json",
+      "ckpt": "/workspace/training/outputs/finetune_vbdemand/ulunas_finetuned.pt",
+      "system": "ulunas",
+      "n": 2,
+      "si_sdr": 16.011394204629465,
+      "si_sdri": 3.634238349066547,
+      "pesq": 2.507341742515564,
+      "estoi": 0.8041260693961985
+    },
+    {
+      "file": "training/outputs/eval_mssnsd_smoke/metrics_summary.json",
+      "ckpt": "training/outputs/finetune_mssnsd_demandex/ulunas_last.pt",
+      "system": "ulunas",
+      "n": 2,
+      "si_sdr": 16.009861058764873,
+      "si_sdri": 3.6327052032019544,
+      "pesq": 2.509284734725952,
+      "estoi": 0.8041771536905684
+    },
+    {
+      "file": "training/outputs/eval_official_init/metrics_summary.json",
+      "ckpt": "/workspace/training/outputs/finetune_vbdemand/ulunas_finetuned.pt",
+      "system": "ulunas",
+      "n": 2,
+      "si_sdr": 6.749605574185433,
+      "si_sdri": 5.3360177344557105,
+      "pesq": 1.8838353753089905,
+      "estoi": 0.6512701300284964
+    }
+  ],
+  "noisy": [
+    {
+      "file": "training/outputs/eval_mssnsd_init/metrics_summary.json",
+      "ckpt": "/workspace/training/outputs/finetune_vbdemand/ulunas_finetuned.pt",
+      "system": "noisy",
+      "n": 2,
+      "si_sdr": 12.377155855562918,
+      "si_sdri": 0.0,
+      "pesq": 1.417298674583435,
+      "estoi": 0.6971916694656004
+    },
+    {
+      "file": "training/outputs/eval_mssnsd_smoke/metrics_summary.json",
+      "ckpt": "training/outputs/finetune_mssnsd_demandex/ulunas_last.pt",
+      "system": "noisy",
+      "n": 2,
+      "si_sdr": 12.377155855562918,
+      "si_sdri": 0.0,
+      "pesq": 1.417298674583435,
+      "estoi": 0.6971916694656004
+    },
+    {
+      "file": "training/outputs/eval_official_init/metrics_summary.json",
+      "ckpt": "/workspace/training/outputs/finetune_vbdemand/ulunas_finetuned.pt",
+      "system": "noisy",
+      "n": 2,
+      "si_sdr": 1.4135878397297228,
+      "si_sdri": 0.0,
+      "pesq": 1.0668752193450928,
+      "estoi": 0.5167226566442465
+    }
+  ]
+}

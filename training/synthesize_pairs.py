@@ -120,9 +120,16 @@ def ingest_public_pairs(args: argparse.Namespace) -> dict:
     repo = Path(args.repo)
     public_root = Path(args.public_root)
     roots = find_vbdemand_roots(public_root)
+    man_dir = Path(args.manifest_out).parent
+    from training.paired_layout import scan_extra_paired, write_extra_manifests
+
+    extras = scan_extra_paired(public_root, repo)
+    extra_counts = write_extra_manifests(extras, man_dir)
     if not roots:
-        print("no public paired VoiceBank+DEMAND layout found; skip ingest")
-        return {"n": 0, "mode": "ingest", "by_split": {}}
+        print("no public paired VoiceBank+DEMAND layout found; skip VB ingest")
+        summary = {"n": 0, "mode": "ingest", "by_split": {}, "extra": extra_counts}
+        print(json.dumps(summary, indent=2))
+        return summary
 
     out_root = Path(args.paired_output_dir)
     written: list[dict] = []
@@ -177,7 +184,6 @@ def ingest_public_pairs(args: argparse.Namespace) -> dict:
             )
 
     written.sort(key=lambda r: (r["split"], r["id"]))
-    man_dir = Path(args.manifest_out).parent
     write_jsonl(Path(args.manifest_out).with_name("paired_all.jsonl"), written)
     train_rows = [r for r in written if r["split"] == "train"]
     dev_rows = [r for r in written if r["split"] == "dev"]
@@ -191,6 +197,7 @@ def ingest_public_pairs(args: argparse.Namespace) -> dict:
         "by_split": {"train": n_train, "dev": n_dev, "test": n_eval},
         "copy_audio": copy_audio,
         "scanned": len(written),
+        "extra": extra_counts,
     }
     print(json.dumps(summary, indent=2))
     return summary

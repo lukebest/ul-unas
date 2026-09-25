@@ -46,6 +46,41 @@ python training/download_vbdemand.py --output_dir training/data/raw/voicebank_de
 
 WAV files stay under `training/data/raw/` (gitignored). A local `LICENSE.md` is written next to the data. This repo uses the set for a **research fine-tune** of UL-UNAS, not as a commercially cleared product model.
 
+## MS-SNSD (T-ulunas-posttrain-002)
+
+| Dataset | URL | License note |
+|---|---|---|
+| MS-SNSD scripts | https://github.com/microsoft/MS-SNSD | MIT |
+| MS-SNSD clean speech | see Microsoft README | Edinburgh / PTDB-TUG (**ODbL**). Confirm before redistribution. |
+| MS-SNSD noise | see Microsoft README | CC0 + DEMAND CC BY-SA 3.0 |
+| In-repo smoke mixer | `training/synthesize_mssnsd.py` | Uses `audio/clean` + residual/procedural noise; **not** the official corpus |
+
+Do **not** download the full CleanSpeech/Noise dumps on smoke boxes. Cap synth hours at 0.5–2.0 unless `--allow_large`.
+
+```bash
+python training/download_mssnsd.py --fetch_scripts
+python training/synthesize_mssnsd.py --hours 0.5 --max_hours 2
+```
+
+## VB-DemandEx (T-ulunas-posttrain-002)
+
+| Dataset | URL | License note |
+|---|---|---|
+| VB-DemandEx (HF card) | https://huggingface.co/datasets/NikolaiKyhne/VB-DemandEx | Card license **MIT**; pretty_name VB-DemandEx; ~1.94 GB |
+| Paper / AAU | https://arxiv.org/abs/2501.06146 | xLSTM-SENet |
+| Underlying VB+DEMAND | https://doi.org/10.7488/ds/2117 | VCTK CC BY 4.0 + DEMAND BY-SA 3.0 + DataShare End-user |
+
+Pre-paired zips `clean_{train,valid,test}` + `noisy_{train,valid,test}`. Layout adapter writes `16k/{train,dev,test}/{clean,noisy}` (`valid` → `dev`) and is **not** a `find_vbdemand_roots` alias.
+
+```bash
+python training/download_demandex.py --layout
+# Full HF pull is opt-in: python training/download_demandex.py --download
+```
+
+## URGENT / DNS (not ingested this round)
+
+URGENT2024 official is **CC BY-NC-SA 4.0** (NC — research eval only; not a commercial train set). DNS 1–5 full dumps are TB-class and are **not** downloaded here. No `download_dns.py` / `download_urgent.py` ship in this task.
+
 ## Local fallback used by this repo
 
 If `training/data/raw/` is empty, `synthesize_pairs.py` builds a runnable bootstrap set from:
