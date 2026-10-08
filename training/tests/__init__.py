@@ -1,0 +1,1 @@
+# Adapter / gate unit tests.

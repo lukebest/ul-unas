@@ -92,6 +92,7 @@ def paired_row(
     layer: str = "vbdemand",
     held_out: bool = False,
     extra: dict | None = None,
+    source: str = "VoiceBank+DEMAND",
 ) -> dict:
     rec = {
         "id": utt,
@@ -100,7 +101,7 @@ def paired_row(
         "layer": layer,
         "split": split,
         "scene": "speech_enhancement",
-        "source": "VoiceBank+DEMAND",
+        "source": source,
         "speaker": speaker_id(utt),
         "held_out": held_out,
         "use_for_training": split == "train" and not held_out,
@@ -211,7 +212,19 @@ def scan_public(data_root: Path, repo: Path) -> dict[str, list[dict]]:
         return found
     for child in data_root.iterdir():
         key = child.name.lower()
-        if "voicebank" in key or "valentini" in key or "vbdemand" in key:
+        if any(
+            token in key
+            for token in (
+                "voicebank",
+                "valentini",
+                "vbdemand",
+                "demandex",
+                "mssnsd",
+                "ms-snsd",
+                "ms_snsd",
+                "snsd",
+            )
+        ):
             continue
         for prefix, (kind, source) in mapping.items():
             if prefix in key:
@@ -249,6 +262,9 @@ def build(args: argparse.Namespace) -> dict:
     noise.extend(public["noise_music"] + public["noise_gun"] + public["noise_general"])
 
     vb = scan_vbdemand(Path(args.public_root), repo)
+    from training.paired_layout import scan_extra_paired, write_extra_manifests
+
+    extras = scan_extra_paired(Path(args.public_root), repo)
 
     demo_eval = []
     for wav in sorted((repo / "demo").glob("*降噪前.wav")):
@@ -292,6 +308,7 @@ def build(args: argparse.Namespace) -> dict:
     n_train = write_jsonl_skip_empty(out / "train_vbdemand.jsonl", vb["train"])
     n_dev = write_jsonl_skip_empty(out / "dev_vbdemand.jsonl", vb["dev"])
     n_eval = write_jsonl_skip_empty(out / "eval_vbdemand.jsonl", vb["eval"])
+    extra_counts = write_extra_manifests(extras, out)
 
     summary = {
         "speech": len(speech),
@@ -302,10 +319,13 @@ def build(args: argparse.Namespace) -> dict:
         "train_vbdemand": n_train,
         "dev_vbdemand": n_dev,
         "eval_vbdemand": n_eval,
+        **extra_counts,
         "public_root": repo_rel(Path(args.public_root), repo) if Path(args.public_root).exists() else str(args.public_root),
         "notes": (
             "Demo 降噪前/后 clips are held-out real tests and must not be used for training. "
-            "In-repo official_paired clips are also held-out. VoiceBank+DEMAND eval is the official test speakers."
+            "In-repo official_paired clips are also held-out. VoiceBank+DEMAND eval is the official test speakers. "
+            "MS-SNSD / VB-DemandEx write separate {train,dev,eval}_{mssnsd,vbdemandex}.jsonl; "
+            "scan_vbdemand and ingest_public_pairs stay the VB-DMD writers."
         ),
     }
     (out / "manifest_summary.json").write_text(json.dumps(summary, indent=2, ensure_ascii=False), encoding="utf-8")

@@ -7,7 +7,10 @@ venv/
 # Large public datasets (download via training/download_vbdemand.py)
 training/data/raw/
 training/data/processed/
+training/data/smoke/
 training/data/manifests/paired_all.jsonl
+training/data/manifests/paired_mssnsd.jsonl
+training/data/manifests/paired_vbdemandex.jsonl
 
 # Per-clip eval dumps (keep metrics.md / eval_compare.json)
 training/outputs/**/metrics.json
@@ -18,3 +21,6 @@ training/outputs/**/ab_listen/
 training/outputs/**/*.wav
 training/outputs/**/*.onnx
 training/outputs/**/*.npy
+
+# Domain-expand CPU smoke weights (not a ship ckpt)
+training/outputs/finetune_mssnsd_demandex/*.pt
